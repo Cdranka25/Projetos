@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Projeto Apresentação Social</title>
+
+    <link rel="shortcut icon" href="../img/favicon.png" type="image/x-icon">
+    <link rel="stylesheet" href="../css/style.css">
+    <script src="../js/script.js"></script>
+
+</head>
+
+<body>
+
+    <main>
+        <section id="texto">
+            <h3>Selecione uma rede social <br> e clique em Acessar</h3>
+
+        </section>
+        <section id="telefone">
+            <iframe src="home.html" name="tela" id="tela" frameborder="0"></iframe>
+        </section>
+        <section id="redes-sociais">
+            <a href="home.html" target="tela"> <img src="../img/logo-home.jpg" alt="Home"></a><br>
+            <a href="linkedin.html" target="tela"><img src="../img/logo-Linkedin.jpg" alt="Linkedin"></a><br>
+            <a href="github.html" target="tela"><img src="../img/logo-github.jpg" alt="Github"></a><br>
+            <a href="instagram.html" target="tela"><img src="../img/logo-instagram.jpg" alt="Instagram"></a><br>
+
+        </section>
+
+    </main>
+    <script>
+        window.addEventListener('DOMContentLoaded', ajustarTexto);
+        window.addEventListener('resize', ajustarTexto);
+    </script>
+    <footer>
+
+    </footer>
+</body>
+
+</html>

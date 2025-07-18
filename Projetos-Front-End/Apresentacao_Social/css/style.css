@@ -1,0 +1,187 @@
+@charset "UTF-8";
+
+* {
+    margin: 0px;
+    padding: 0px;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+html,
+body {
+    height: 100vh;
+    width: 100vw;
+    background-color: black;
+    min-width: 325px;
+    overflow-x: auto;
+}
+
+main {
+    position: relative;
+    height: 100vh;
+
+}
+
+body {
+    background: url(../img/fundo-madeira.jpg) no-repeat top center;
+    background-size: cover;
+    background-attachment: fixed;
+}
+
+section#telefone {
+    margin-top: 15px;
+    margin-bottom: 15px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+
+    height: 627px;
+    width: 311px;
+    background: url(../img/frame-iphone.png) no-repeat;
+}
+
+section#redes-sociais {
+    text-align: right;
+}
+
+section#redes-sociais img {
+    width: 50px;
+    height: 50px;
+
+    margin: 10px;
+    border-radius: 50%;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.400);
+    box-sizing: border-box;
+
+}
+section#redes-sociais img:hover{
+    border: 2px solid rgba(255, 255, 255, 0.651);
+    transform: translate(-3px, -3px);
+    box-shadow: 5px, 5px, 10px rgba(0, 0, 0, 0.671);
+    transition: transform 0.5s border 1s;
+}
+
+iframe#tela {
+    position: relative;
+    top: 80px;
+    left: 22px;
+    width: 267px;
+    height: 471px;
+}
+
+section#texto{
+    text-align: right;
+    padding-top: 15px;
+    padding-right: 15px;
+    font-size: large;
+    color: white;
+}
+/* -------------------------------------------------------------------------------------------- */
+/* Responsividade para largura */
+@media (max-width: 600px) {
+
+    section#texto {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        background-color: rgba(0, 0, 0, 0.37); 
+        padding: 10px;
+        text-align: center;
+        z-index: 1000; 
+        font-size: medium
+    }
+
+    section#redes-sociais {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        background-color: rgba(0, 0, 0, 0.37); 
+        padding: 10px 0;
+        z-index: 1000; 
+        display: flex;
+        justify-content: center; 
+        align-items: center;
+    }
+
+    section#redes-sociais img {
+        margin: 0 5px; 
+        width: 40px; 
+        height: 40px;
+    }
+}
+
+@media (max-width: 500px) {
+
+    section#redes-sociais img {
+        width: 35px;
+        height: 35px;
+        margin: 5px;
+
+    }
+}
+
+@media (max-width: 400px) {
+    section#redes-sociais img {
+        margin: 0 5px; 
+        width: 30px; 
+        height: 30px;
+    }
+}
+/* Responsividade para altura e largura */
+
+@media (max-width: 860px) and (max-height: 730px) {
+
+    section#telefone{
+        margin-top: 0px;
+        margin-bottom: 0px;
+    }
+    section#texto {
+        position: fixed;
+        width: 100%;
+        background-color: rgba(0, 0, 0, 0.37); 
+        padding: 5px;
+        text-align: center;
+        z-index: 1000; 
+        font-size: small
+    }
+
+    section#redes-sociais {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        background-color: rgba(0, 0, 0, 0.37); 
+        padding: 3px 0;
+        z-index: 1000; 
+        display: flex;
+        justify-content: center; 
+        align-items: center;
+    }
+
+    section#redes-sociais img {
+        margin:  0px; 
+        width: 30px; 
+        height: 30px;
+    }
+}
+
+/* Responsividade para altura */
+@media (max-height: 720px) {
+    section#texto {
+        padding: 8px;
+    }
+}
+
+@media (max-height: 710px) {
+
+    section#texto {
+        padding: 5px;
+    }
+    section#redes-sociais img {
+        margin:  0px; 
+        width: 25px; 
+        height: 25px;
+    }
+}

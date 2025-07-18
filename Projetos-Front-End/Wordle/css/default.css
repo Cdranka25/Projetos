@@ -1,0 +1,169 @@
+body {
+    margin: 0px;
+}
+
+header {
+    background-color: #575757;
+    color: white;
+
+    box-shadow:
+        inset 0 8px 20px rgba(0, 0, 0, 0.3),
+        inset 0 -8px 20px rgba(0, 0, 0, 0.3);
+
+    vertical-align: middle;
+    text-align: center;
+    padding: 10px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.divLogoMenu {
+    text-align: right;
+    width: 50px;
+    height: 50px;
+}
+
+.divLogoMenu img {
+    width: 50px;
+    height: 50px;
+}
+
+.divLogoCabecalho {
+    display: flex;
+    height: 50px;
+    width: 50px;
+    height: 50px;
+}
+
+.divLogoCabecalho img {
+    width: 50px;
+    height: 50px;
+
+
+}
+
+button {
+    border-radius: 5px;
+    width: 173px;
+    height: 30px;
+}
+
+button:hover {
+    background-color: lightgray;
+}
+
+button:active {
+    background-color: gray;
+}
+
+
+footer {
+    background-color: #333;
+    color: white;
+    text-align: center;
+    padding: 5px 0;
+    box-shadow:
+        inset 0 8px 20px rgba(0, 0, 0, 0.3),
+        inset 0 -8px 20px rgba(0, 0, 0, 0.3);
+}
+
+@keyframes pulso {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.2);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+.correto {
+    animation: pulso 0.3s ease-in-out;
+}
+
+/* ----------------------------------------------------------------------------------------------- */
+/*Responsividade para Largura*/
+
+@media (max-width: 500px) {
+    footer {
+        height: 78px;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    footer p {
+        margin: 0;
+        text-align: center;
+        font-size: small;
+    }
+}
+
+@media (max-width: 322px) {
+    footer p {
+        margin: 0;
+        text-align: center;
+        font-size: x-small;
+    }
+
+    header {
+        padding: 10px;
+        height: 50px;
+        align-items: center;
+    }
+
+    header img {
+        height: 40px;
+        width: 40px;
+        padding: 0px;
+    }
+
+
+}
+
+/* Responsividade para Altura */
+@media (max-height: 770px) {
+    header {
+        height: 40px;
+        align-items: center;
+    }
+
+    .divLogoCabecalho {
+        height: 40px;
+        width: 40px;
+    }
+
+    .divLogoCabecalho img {
+        height: 40px;
+        width: 40px;
+    }
+
+    .divLogoMenu {
+        height: 40px;
+        width: 40px;
+    }
+
+    .divLogoMenu img {
+        height: 40px;
+        width: 40px;
+    }
+
+    footer {
+        height: 60px;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    footer p {
+        margin: 0;
+        text-align: center;
+        font-size: x-small;
+    }
+}
