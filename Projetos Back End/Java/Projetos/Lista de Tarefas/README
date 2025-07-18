@@ -1,0 +1,19 @@
+Lista de Tarefas ✅
+
+Funcionalidades:
+    ✅ Adicionar tarefas: Inclua novas tarefas na lista.
+    ❌ Excluir tarefas: Remova tarefas da lista.
+    ☑️ Marcar como concluída: Selecione uma tarefa para indicar que foi concluída.
+    🔄 Numeração automática: As tarefas são numeradas corretamente, mesmo após exclusões
+
+Instalação e Execução
+    Baixe ou clone este repositório.
+    Abra o projeto no NetBeans ou outra IDE compatível com Java.
+    Compile e execute o programa.
+
+Tecnologias Utilizadas
+    Java (JDK 17+)
+    Swing (Interface gráfica)
+
+📜 Licença
+Este projeto é de código aberto e pode ser utilizado livremente.
