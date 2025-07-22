@@ -1,1 +1,0 @@
-Projetos relacionados à algoritmos e estrutura de dados, desenvolvidos para fins avaliativos da universidade
