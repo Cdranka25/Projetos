@@ -1,9 +1,11 @@
+import datetime
 import tkinter as tk
 from tkinter import messagebox
 from cronometro import Cronometro
 from despertador import Despertador
 from temporizador import Temporizador
 from formatador_tempo import formatar_tempo
+from tkinter import Tk, Listbox
 
 class App:
     def __init__(self, root):
@@ -117,63 +119,137 @@ class App:
 
     def abrir_despertador(self):
         self.janela_despertador = tk.Toplevel(self.root)
-        self.janela_despertador.geometry("300x300")
+        self.janela_despertador.geometry("320x400")
         self.janela_despertador.title("Despertador")
         
-        tk.Button(self.janela_despertador, text="Novo Alarme", command=self.novo_alarme).pack(pady=5)
+        #Botões superiores
+        btn_frame = tk.Frame(self.janela_despertador)
+        btn_frame.pack(pady=5)
         
+        
+        tk.Button(btn_frame, text="Novo Alarme", command=self.config_alarme).pack(side="left", padx=5)
+        tk.Button(btn_frame, text="Alterar", command=self.alterar_alarme).pack(side="left", padx=5)
+        tk.Button(btn_frame, text="Habilitar", command=self.habilitar_despertador).pack(side="left", padx=5)
+        tk.Button(btn_frame, text="Desabilitar", command=self.desabilitar_despertador).pack(side="left", padx=5)
+        tk.Button(btn_frame, text="Excluir", command=self.delete_despertador).pack(side="left", padx=5)
+
         #lista de alarmes
-        self.lista_alarmes = []
+        frame_lista = tk.Frame(self.janela_despertador)
+        frame_lista.pack(fill="both", expand=True)
+
+        scrollbar = tk.Scrollbar(frame_lista)
+        scrollbar.pack(side="right", fill="y")
+
+        self.lista_despertadores = tk.Listbox(frame_lista, selectmode="extended", yscrollcommand=scrollbar.set)
+        self.lista_despertadores.pack(side="left", fill="both", expand=True)
+        scrollbar.config(command=self.lista_despertadores.yview)
+
+        self.atualizar_lista_despertadores()
         
-        tk.Button(self.janela_despertador, text="Alterar", command=self.config_alarme).pack(pady=5)
-        tk.Button(self.janela_despertador, text="Habilitar", command=self.habilitar_despertador).pack(pady=5)
-        tk.Button(self.janela_despertador, text="Desabilitar", command=self.desabilitar_despertador).pack(pady=5)
-        tk.Button(self.config_alarme, text="Excluir", command=self.delete_despertador).pack(pady=5)
 
-    def config_alarme(self):
-        self.janela_despertador = tk.Toplevel(self.root)
-        self.janela_despertador.geometry("300x300")
-        self.janela_despertador.title("Novo Alarme")
-
-        # Entradas com valor inicial 00
-        tk.Label(self.janela_despertador, text="Horas:").pack()
-        self.entrada_horas = tk.Entry(self.janela_despertador, width=5)
-        self.entrada_horas.insert(0, "00")
-        self.entrada_horas.pack()
-
-        tk.Label(self.janela_despertador, text="Minutos:").pack()
-        self.entrada_minutos = tk.Entry(self.janela_despertador, width=5)
-        self.entrada_minutos.insert(0, "00")
-        self.entrada_minutos.pack()
-
-        self.label_temporizador = tk.Label(self.janela_despertador, text="00:00", font=("Helvetica", 24))
-        self.label_temporizador.pack(pady=10)
-
-        tk.Button(self.config_alarme, text="Salvar", command=self.add_despertador).pack(pady=5)
-        tk.Button(self.config_alarme, text="Excluir", command=self.delete_despertador).pack(pady=5)
-
-    def add_despertador(self):
+    def atualizar_lista_despertadores(self):
+        self.lista_despertadores.delete(0, tk.END)
+        for alarme in self.despertador.alarmes:
+            status = "Ativo" if alarme["ativo"] else "Inativo"
+            repetir = " (R)" if alarme["repetir"] else ""
+            self.lista_despertadores.insert(tk.END, f"{alarme['hora']:02d}:{alarme['minuto']:02d} {status}{repetir}")
+            
+    def alterar_alarme(self):
+        selecionados = self.lista_despertadores.curselection()
+        if len(selecionados) != 1:
+            messagebox.showwarning("Aviso", "Selecione apenas um alarme para alterar.")
+            return
+        index = selecionados[0]
+        self.alterar_alarme_index = index
+        alarme = self.despertador.alarmes[index]
+        self.config_alarme(editar=True, alarme=alarme)
     
-    def delete_despertador(self):
+    def config_alarme(self, editar=False, alarme=None):
+        self.janela_config = tk.Toplevel(self.root)
+        self.janela_config.geometry("300x320")
+        self.janela_config.title("Configurar Alarme")
+
+        self.var_hora = tk.IntVar(value=alarme["hora"] if editar else 0)
+        self.var_minuto = tk.IntVar(value=alarme["minuto"] if editar else 0)
+        self.var_repetir = tk.BooleanVar(value=alarme["repetir"] if editar else False)
+
+        # Entrada de hora
+        tk.Label(self.janela_config, text="Hora:").pack()
+        tk.Spinbox(self.janela_config, from_=0, to=23, textvariable=self.var_hora, width=5, format="%02.0f").pack()
+
+        # Entrada de minuto
+        tk.Label(self.janela_config, text="Minuto:").pack()
+        tk.Spinbox(self.janela_config, from_=0, to=59, textvariable=self.var_minuto, width=5, format="%02.0f").pack()
+
+        # Repetição
+        tk.Checkbutton(self.janela_config, text="Repetir semanalmente", variable=self.var_repetir).pack(pady=5)
+
+        # Botões
+        tk.Button(self.janela_config, text="Salvar", command=lambda: self.add_despertador(editar, alarme)).pack(pady=5)
+        if editar:
+            tk.Button(self.janela_config, text="Excluir", command=lambda: self.delete_despertador(alarme)).pack(pady=5)
+
+    def add_despertador(self, editar=False, alarme_antigo=None):
+        hora = self.var_hora.get()
+        minuto = self.var_minuto.get()
+        repetir = self.var_repetir.get()
+        
+        if editar:
+            # Remove o alarme antigo
+            self.despertador.delete_alarme(alarme_antigo["hora"], alarme_antigo["minuto"])
+        
+        self.despertador.adicionar_alarme(
+            hora=hora,
+            minuto=minuto,
+            repetir=repetir,
+            callback=self.tocando_despertador
+        )
+        
+        self.atualizar_lista_despertadores()
+        self.janela_config.destroy()
+    
+    def delete_despertador(self, alarme_especifico=None):
+        if alarme_especifico:
+            self.despertador.delete_alarme(alarme_especifico["hora"], alarme_especifico["minuto"])
+        else:
+            selecionados = self.lista_despertadores.curselection()
+            for i in reversed(selecionados):
+                alarme = self.despertador.alarmes[i]
+                self.despertador.delete_alarme(alarme["hora"], alarme["minuto"])
+
+        self.atualizar_lista_despertadores()
+        if hasattr(self, "janela_config") and self.janela_config.winfo_exists():
+            self.janela_config.destroy()
         
     def habilitar_despertador(self):
-        
+        for i in self.lista_despertadores.curselection():
+            alarme = self.despertador.alarmes[i]
+            self.despertador.ativar_alarme(alarme["hora"], alarme["minuto"])
+        self.atualizar_lista_despertadores()
+
     def desabilitar_despertador(self):
-        
-        
+        for i in self.lista_despertadores.curselection():
+            alarme = self.despertador.alarmes[i]
+            self.despertador.desativar_alarme(alarme["hora"], alarme["minuto"])
+        self.atualizar_lista_despertadores()
+          
     def tocando_despertador(self):
-        self.janela_despertador = tk.Toplevel(self.root)
-        self.janela_despertador.geometry("300x300")
-        self.janela_despertador.title("Despertador Tocando")        
-        
-        tk.Button(self.tocando_despertador, text="Parar", command=self.parar_despertador).pack(pady=5)
-        tk.Button(self.tocando_despertador, text="Parar", command = self.parar_alarme).pack(pady=5)
-        
-        
-    def soneca_alarme(self):
+        janela = tk.Toplevel(self.root)
+        janela.geometry("300x150")
+        janela.title("Despertador Tocando")
+
+        tk.Label(janela, text="⏰ Alarme!", font=("Helvetica", 18)).pack(pady=10)
+        tk.Button(janela, text="Parar", command=janela.destroy).pack(side="left", padx=20, pady=20)
+        tk.Button(janela, text="Soneca (5 min)", command=lambda: [janela.destroy(), self.soneca_alarme(5)]).pack(side="right", padx=20, pady=20)
+            
+    def soneca_alarme(self, minutos):
+        agora = datetime.datetime.now()
+        self.despertador.soneca_alarme(agora.hour, agora.minute, minutos)
         
     def parar_alarme(self):
-        
+        agora = datetime.datetime.now()
+        self.despertador.parar_alarme(agora.hour, agora.minute)
+					
     # ---------------------------------------------------#
 
     def atualizar_interface(self, tempo_ms, label):

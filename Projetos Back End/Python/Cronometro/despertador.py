@@ -11,12 +11,24 @@ class Despertador:
     def adicionar_alarme(
         self, hora, minuto, repetir=False, dias_semana=None, callback=None
     ):
+        dias_semana = dias_semana if dias_semana else []
+
+        # Verifica se já existe alarme igual
+        for alarme in self.alarmes:
+            if (
+                alarme["hora"] == hora and
+                alarme["minuto"] == minuto and
+                alarme["repetir"] == repetir and
+                sorted(alarme["dias_semana"]) == sorted(dias_semana)
+            ):
+                print("Alarme já existe, não foi adicionado.")
+                return False
 
         alarme = {
             "hora": hora,
             "minuto": minuto,
             "repetir": repetir,
-            "dias_semana": dias_semana if dias_semana else [],
+            "dias_semana": dias_semana,
             "callback": callback,
             "ativo": True,
             "executando": False,
@@ -26,6 +38,8 @@ class Despertador:
         thread.start()
         alarme["thread"] = thread
         self.alarmes.append(alarme)
+        print(f"Alarme adicionado: {hora:02d}:{minuto:02d} (Repetir: {repetir}, Dias: {dias_semana})")
+        return True
 
     def _verificar_alarme(self, alarme):
         while alarme["ativo"]:
@@ -88,3 +102,9 @@ class Despertador:
         for alarme in self.alarmes:
             if alarme["hora"] == hora and alarme["minuto"] == minuto:
                 alarme["ativo"] = True
+
+    def delete_alarme(self, hora, minuto):
+        for alarme in self.alarmes:
+            if alarme["hora"] == hora and alarme["minuto"] == minuto:
+                self.alarmes.remove(alarme)
+                print(f"Alarme de {hora}:{minuto} removido com sucesso!")
