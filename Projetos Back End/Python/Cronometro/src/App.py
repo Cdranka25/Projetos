@@ -119,7 +119,7 @@ class App:
 
     def abrir_despertador(self):
         self.janela_despertador = tk.Toplevel(self.root)
-        self.janela_despertador.geometry("320x400")
+        self.janela_despertador.geometry("400x450")
         self.janela_despertador.title("Despertador")
         
         #Botões superiores
