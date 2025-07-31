@@ -122,3 +122,9 @@ class Despertador:
             if alarme["hora"] == hora and alarme["minuto"] == minuto:
                 self.alarmes.remove(alarme)
                 print(f"Alarme de {hora}:{minuto} removido com sucesso!")
+
+    def delete_alarme(self, hora, minuto):
+        for alarme in self.alarmes:
+            if alarme["hora"] == hora and alarme["minuto"] == minuto:
+                self.alarmes.remove(alarme)
+                print(f"Alarme de {hora}:{minuto} removido com sucesso!")
