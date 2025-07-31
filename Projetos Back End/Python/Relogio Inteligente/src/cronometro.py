@@ -11,21 +11,26 @@ class Cronometro:
 
 
     def iniciar_cronometro(self, callback=None):
-        if not self.rodando:
-            self.rodando = True
-            self._callback = callback
-            self._thread = threading.Thread(target=self.contar_cronometro)
-            self._thread.daemon = True
-            self._thread.start()
+
+        if self.rodando:
+            return
+        
+        self.rodando = True
+        self._callback = callback
+        self._thread = threading.Thread(target=self.contar_cronometro)
+        self._thread.daemon = True
+        self._thread.start()
 
     def contar_cronometro(self):
         ultimo_tempo = time.perf_counter()
+
         while self.rodando:
-            time.sleep(0.005)
+            time.sleep(0.1)
             agora = time.perf_counter()
             delta = agora - ultimo_tempo
             self.tempo += delta
             ultimo_tempo = agora
+            
             if self._callback:
                 self._callback(self.tempo)
 

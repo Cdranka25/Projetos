@@ -1,75 +1,89 @@
 import datetime
 import threading
 import time
-import locale
 
 
 class Despertador:
+
+    DIAS_SEMANA = {
+        "segunda-feira": 0,
+        "terça-feira": 1,
+        "quarta-feira": 2,
+        "quinta-feira": 3,
+        "sexta-feira": 4,
+        "sábado": 5,
+        "domingo": 6
+    }
+
     def __init__(self):
         self.alarmes = []
+        self._lock = threading.Lock()
 
-    def adicionar_alarme(
-        self, hora, minuto, repetir=False, dias_semana=None, callback=None
-    ):
-        dias_semana = dias_semana if dias_semana else []
+    def __del__(self):
+        with self._lock:
+            for alarme in self.alarmes:
+                alarme["ativo"] = False
+                if "thread" in alarme:
+                    alarme["thread"].join(timeout=1)
+    
+    def adicionar_alarme(self, hora, minuto, audio, repetir=False, dias=None, callback=None):
+        
+        with self._lock:
+            if not (0 <= hora <= 23 and 0 <= minuto <= 59):
+                raise ValueError("Hora e minuto devem estar dentro dos limites válidos")
+        
+        dias = dias or []
 
-        # Verifica se já existe alarme igual
         for alarme in self.alarmes:
-            if (
-                alarme["hora"] == hora and
-                alarme["minuto"] == minuto and
-                alarme["repetir"] == repetir and
-                sorted(alarme["dias_semana"]) == sorted(dias_semana)
-            ):
-                print("Alarme já existe, não foi adicionado.")
+            if (alarme["hora"] == hora and alarme["minuto"] == minuto and
+                alarme["repetir"] == repetir and alarme["dias"] == dias):
                 return False
 
         alarme = {
             "hora": hora,
             "minuto": minuto,
+            "audio": audio,
             "repetir": repetir,
-            "dias_semana": dias_semana,
+            "dias": dias,
             "callback": callback,
             "ativo": True,
-            "executando": False,
+            "executando": False
         }
+
         thread = threading.Thread(target=self._verificar_alarme, args=(alarme,))
         thread.daemon = True
         thread.start()
         alarme["thread"] = thread
         self.alarmes.append(alarme)
-        print(f"Alarme adicionado: {hora:02d}:{minuto:02d} (Repetir: {repetir}, Dias: {dias_semana})")
         return True
 
     def _verificar_alarme(self, alarme):
         while alarme["ativo"]:
-            locale.setlocale(locale.LC_TIME, "pt_BR.UTF-8")
             agora = datetime.datetime.now()
             dia_atual = agora.strftime("%A").lower()
-            dias_em_portugues = {
+            dia_atual_pt = {
                 "monday": "segunda-feira",
                 "tuesday": "terça-feira",
                 "wednesday": "quarta-feira",
                 "thursday": "quinta-feira",
                 "friday": "sexta-feira",
                 "saturday": "sábado",
-                "sunday": "domingo",
-            }
-            dia_atual_pt = dias_em_portugues.get(dia_atual)
+                "sunday": "domingo"
+            }.get(dia_atual)
 
-            hora_certa = (
-                agora.hour == alarme["hora"] and agora.minute == alarme["minuto"]
-            )
-
-            if hora_certa and not alarme["executando"]:
-                if not alarme["dias_semana"] or dia_atual_pt in alarme["dias_semana"]:
+            hora_certa = (agora.hour == alarme["hora"] and 
+                         agora.minute == alarme["minuto"] and 
+                         not alarme["executando"])
+            
+            if hora_certa:
+                if not alarme["dias"] or dia_atual_pt in alarme["dias"]:
                     alarme["executando"] = True
                     if alarme["callback"]:
                         alarme["callback"]()
                     if not alarme["repetir"]:
                         alarme["ativo"] = False
 
-            time.sleep(1)
+            time.sleep(30)
 
     def soneca_alarme(self, hora, minuto, minutos_soneca):
         for alarme in self.alarmes:
