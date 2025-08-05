@@ -18,12 +18,8 @@ class App:
         self.root.geometry("300x300")
 
         tk.Button(root, text="Cronômetro", command=self.abrir_cronometro).pack(pady=10)
-        tk.Button(root, text="Temporizador", command=self.abrir_temporizador).pack(
-            pady=10
-        )
-        tk.Button(root, text="Despertador", command=self.abrir_despertador).pack(
-            pady=10
-        )
+        tk.Button(root, text="Temporizador", command=self.abrir_temporizador).pack(pady=10)
+        tk.Button(root, text="Despertador", command=self.abrir_despertador).pack(pady=10)
 
         self.cronometro = Cronometro()
         self.temporizador = Temporizador()
@@ -35,7 +31,7 @@ class App:
     # Cronômetro
 
     def abrir_cronometro(self):
-        if hasattr(self, "janela_cronometro") and self.janela_cronometro.winfo_exists():
+        if hasattr(self, 'janela_cronometro') and self.janela_cronometro.winfo_exists():
             self.janela_cronometro.lift()
             return
 
@@ -44,8 +40,7 @@ class App:
         self.janela_cronometro.title("Cronômetro")
 
         self.label_cronometro = tk.Label(
-            self.janela_cronometro, text="00:00:00:000", font=("Helvetica", 24)
-        )
+            self.janela_cronometro, text="00:00:00:000", font=("Helvetica", 24))
         self.label_cronometro.pack(pady=20)
 
         tk.Button(
@@ -60,9 +55,7 @@ class App:
 
     def iniciar_cronometro(self):
         self.cronometro.iniciar_cronometro(
-            callback=lambda tempo: self.atualizar_interface(
-                tempo, self.label_cronometro
-            )
+            callback=lambda tempo: self.atualizar_interface(tempo, self.label_cronometro)
         )
 
     def parar_cronometro(self):
@@ -76,10 +69,7 @@ class App:
     # Temporizador
 
     def abrir_temporizador(self):
-        if (
-            hasattr(self, "janela_temporizador")
-            and self.janela_temporizador.winfo_exists()
-        ):
+        if hasattr(self, 'janela_temporizador') and self.janela_temporizador.winfo_exists():
             self.janela_temporizador.lift()
             return
 
@@ -103,8 +93,7 @@ class App:
         self.entrada_segundos.pack()
 
         self.label_temporizador = tk.Label(
-            self.janela_temporizador, text="00:00:00:000", font=("Helvetica", 24)
-        )
+            self.janela_temporizador, text="00:00:00:000", font=("Helvetica", 24))
         self.label_temporizador.pack(pady=10)
 
         tk.Button(
@@ -138,9 +127,7 @@ class App:
                 hora=horas,
                 minuto=minutos,
                 segundo=segundos,
-                callback=lambda tempo: self.atualizar_interface(
-                    tempo, self.label_temporizador
-                ),
+                callback=lambda tempo: self.atualizar_interface(tempo, self.label_temporizador)
             )
         except ValueError:
             messagebox.showerror("Erro", "Por favor, insira apenas números.")
@@ -162,10 +149,7 @@ class App:
     # Despertador
 
     def abrir_despertador(self):
-        if (
-            hasattr(self, "janela_despertador")
-            and self.janela_despertador.winfo_exists()
-        ):
+        if hasattr(self, 'janela_despertador') and self.janela_despertador.winfo_exists():
             self.janela_despertador.lift()
             return
 
@@ -177,21 +161,11 @@ class App:
         btn_frame = tk.Frame(self.janela_despertador)
         btn_frame.pack(pady=5)
 
-        tk.Button(btn_frame, text="Novo Alarme", command=self.config_alarme).pack(
-            side="left", padx=5
-        )
-        tk.Button(btn_frame, text="Alterar", command=self.alterar_alarme).pack(
-            side="left", padx=5
-        )
-        tk.Button(btn_frame, text="Habilitar", command=self.habilitar_despertador).pack(
-            side="left", padx=5
-        )
-        tk.Button(
-            btn_frame, text="Desabilitar", command=self.desabilitar_despertador
-        ).pack(side="left", padx=5)
-        tk.Button(btn_frame, text="Excluir", command=self.delete_despertador).pack(
-            side="left", padx=5
-        )
+        tk.Button(btn_frame, text="Novo Alarme", command=self.config_alarme).pack(side="left", padx=5)
+        tk.Button(btn_frame, text="Alterar", command=self.alterar_alarme).pack(side="left", padx=5)
+        tk.Button(btn_frame, text="Habilitar", command=self.habilitar_despertador).pack(side="left", padx=5)
+        tk.Button(btn_frame, text="Desabilitar", command=self.desabilitar_despertador).pack(side="left", padx=5)
+        tk.Button(btn_frame, text="Excluir", command=self.delete_despertador).pack(side="left", padx=5)
 
         # lista de alarmes
         frame_lista = tk.Frame(self.janela_despertador)
@@ -201,8 +175,7 @@ class App:
         scrollbar.pack(side="right", fill="y")
 
         self.lista_despertadores = tk.Listbox(
-            frame_lista, selectmode="extended", yscrollcommand=scrollbar.set
-        )
+            frame_lista, selectmode="extended", yscrollcommand=scrollbar.set)
         self.lista_despertadores.pack(side="left", fill="both", expand=True)
         scrollbar.config(command=self.lista_despertadores.yview)
 
@@ -214,8 +187,7 @@ class App:
             status = "Ativo" if alarme["ativo"] else "Inativo"
             repetir = " (R)" if alarme["repetir"] else ""
             self.lista_despertadores.insert(
-                tk.END, f"{alarme['hora']:02d}:{alarme['minuto']:02d} {status}{repetir}"
-            )
+                tk.END, f"{alarme['hora']:02d}:{alarme['minuto']:02d} {status}{repetir}")
 
     def alterar_alarme(self):
         selecionados = self.lista_despertadores.curselection()
@@ -228,7 +200,7 @@ class App:
 
     def config_alarme(self, editar=False, alarme=None):
         self.janela_config = tk.Toplevel(self.root)
-        self.janela_config.geometry("300x320")
+        self.janela_config.geometry("300x410")
         self.janela_config.title("Configurar Alarme")
 
         self.var_hora = tk.IntVar(value=alarme["hora"] if editar else 0)
@@ -244,8 +216,7 @@ class App:
             to=23,
             textvariable=self.var_hora,
             width=5,
-            format="%02.0f",
-        ).pack()
+            format="%02.0f").pack()
 
         # Entrada de minuto
         tk.Label(self.janela_config, text="Minuto:").pack()
@@ -255,13 +226,11 @@ class App:
             to=59,
             textvariable=self.var_minuto,
             width=5,
-            format="%02.0f",
-        ).pack()
+            format="%02.0f").pack()
 
         # Repetição
         tk.Checkbutton(
-            self.janela_config, text="Repetir semanalmente", variable=self.var_repetir
-        ).pack(pady=5)
+            self.janela_config, text="Repetir semanalmente", variable=self.var_repetir).pack(pady=5)
 
         # Dias da semana
         tk.Label(self.janela_config, text="Dias da Semana:").pack()
@@ -281,20 +250,14 @@ class App:
         pasta_audio = os.path.join(self.BASE_DIR, "..", "media", "aud")
 
         try:
-            self.sons_disponiveis = [
-                f for f in os.listdir(pasta_audio) if f.endswith((".mp3", ".wav"))
-            ]
+            self.sons_disponiveis = [f for f in os.listdir(pasta_audio) if f.endswith((".mp3", ".wav"))]
         except FileNotFoundError:
             self.sons_disponiveis = []
-            messagebox.showerror(
-                "Erro", f"Pasta de áudio não encontrada:\n{pasta_audio}"
-            )
+            messagebox.showerror("Erro", f"Pasta de áudio não encontrada:\n{pasta_audio}")
             return
 
         if not self.sons_disponiveis:
-            messagebox.showerror(
-                "Erro", "Nenhum som de alarme encontrado na pasta 'media/aud'."
-            )
+            messagebox.showerror("Erro", "Nenhum som de alarme encontrado na pasta 'media/aud'.")
             return
 
         # Valor padrão do audio
@@ -303,22 +266,18 @@ class App:
         else:
             self.var_audio.set(self.sons_disponiveis[0])
 
-        tk.OptionMenu(self.janela_config, self.var_audio, *self.sons_disponiveis).pack(
-            pady=5
-        )
+        tk.OptionMenu(self.janela_config, self.var_audio, *self.sons_disponiveis).pack(pady=5)
 
         # Botões
         tk.Button(
             self.janela_config,
             text="Salvar",
-            command=lambda: self.add_despertador(editar, alarme),
-        ).pack(pady=5)
+            command=lambda: self.add_despertador(editar, alarme)).pack(pady=5)
         if editar:
             tk.Button(
                 self.janela_config,
                 text="Excluir",
-                command=lambda: self.delete_despertador(alarme),
-            ).pack(pady=5)
+                command=lambda: self.delete_despertador(alarme)).pack(pady=5)
 
     def add_despertador(self, editar=False, alarme_antigo=None):
         hora = self.var_hora.get()
@@ -332,15 +291,14 @@ class App:
             return
 
         if editar:
-            self.despertador.delete_alarme(
-                alarme_antigo["hora"], alarme_antigo["minuto"]
-            )
+            self.despertador.delete_alarme(alarme_antigo["hora"], alarme_antigo["minuto"])
 
         if repetir and not dias:
-            messagebox.showwarning(
-                "Erro", "Selecione ao menos um dia para repetir o alarme."
-            )
+            messagebox.showwarning("Erro", "Selecione ao menos um dia para repetir o alarme.")
             return
+
+        def callback_alarme():
+            self.tocando_despertador(audio)
 
         success = self.despertador.adicionar_alarme(
             hora=hora,
@@ -348,7 +306,7 @@ class App:
             audio=audio,
             repetir=repetir,
             dias=dias,
-            callback=lambda: self.tocar_audio_seguro(audio),
+            callback=callback_alarme  # Passando a função corretamente
         )
 
         if success:
@@ -359,9 +317,7 @@ class App:
 
     def delete_despertador(self, alarme_especifico=None):
         if alarme_especifico:
-            self.despertador.delete_alarme(
-                alarme_especifico["hora"], alarme_especifico["minuto"]
-            )
+            self.despertador.delete_alarme(alarme_especifico["hora"], alarme_especifico["minuto"])
         else:
             selecionados = self.lista_despertadores.curselection()
             for i in reversed(selecionados):
@@ -388,20 +344,36 @@ class App:
         janela = tk.Toplevel(self.root)
         janela.geometry("300x150")
         janela.title("Despertador Tocando")
-
+        
+        
         tk.Label(janela, text="⏰ Alarme!", font=("Helvetica", 18)).pack(pady=10)
+        
+        btn_frame = tk.Frame(janela)
+        btn_frame.pack()
+        
         tk.Button(
-            janela,
+            btn_frame,
             text="Parar",
-            command=lambda: [janela.destroy(), self.parar_alarme()],
+            command=lambda: [janela.destroy(), self.parar_alarme()]
         ).pack(side="left", padx=20, pady=20)
+        
         tk.Button(
-            janela,
+            btn_frame,
             text="Soneca (5 min)",
-            command=lambda: [janela.destroy(), self.soneca_alarme(5)],
+            command=lambda: [janela.destroy(), self.soneca_alarme(5)]
         ).pack(side="right", padx=20, pady=20)
 
-        self.tocar_audio_seguro(nome_audio)
+        # Tocar o áudio em uma thread separada
+        caminho_audio = os.path.join(self.BASE_DIR, "..", "media", "aud", nome_audio)
+        try:
+            if os.path.exists(caminho_audio):
+                threading.Thread(
+                    target=playsound,
+                    args=(caminho_audio,),
+                    daemon=True
+                ).start()
+        except Exception as e:
+            messagebox.showerror("Erro", f"Não foi possível reproduzir o áudio: {str(e)}")
 
     def soneca_alarme(self, minutos):
         agora = datetime.datetime.now()
@@ -422,12 +394,12 @@ class App:
         try:
             if os.path.exists(caminho_audio):
                 threading.Thread(
-                    target=playsound, args=(caminho_audio,), daemon=True
+                    target=playsound,
+                    args=(caminho_audio,),
+                    daemon=True
                 ).start()
         except Exception as e:
-            messagebox.showerror(
-                "Erro", f"Não foi possível reproduzir o áudio: {str(e)}"
-            )
+            messagebox.showerror("Erro", f"Não foi possível reproduzir o áudio: {str(e)}")
 
 
 root = tk.Tk()
