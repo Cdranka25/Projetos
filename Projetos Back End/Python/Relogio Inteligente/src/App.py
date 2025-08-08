@@ -20,6 +20,8 @@ class App(ctk.CTk):
         self.title("Relógio Inteligente")
         self.geometry("350x400")
         self.resizable(False, False)
+        self.lift()                     
+        self.focus_force()               
         
         self.main_frame = ctk.CTkFrame(self)
         self.main_frame.pack(pady=20, padx=20, fill="both", expand=True)
@@ -69,6 +71,8 @@ class App(ctk.CTk):
         self.janela_cronometro.geometry("350x350")
         self.janela_cronometro.title("Cronômetro")
         self.janela_cronometro.resizable(False, False)
+        self.janela_cronometro.lift()                     
+        self.janela_cronometro.focus_force()  
 
         frame = ctk.CTkFrame(self.janela_cronometro)
         frame.pack(pady=20, padx=20, fill="both", expand=True)
@@ -132,6 +136,8 @@ class App(ctk.CTk):
         self.janela_temporizador.geometry("350x450")
         self.janela_temporizador.title("Temporizador")
         self.janela_temporizador.resizable(False, False)
+        self.janela_temporizador.lift()                     
+        self.janela_temporizador.focus_force()  
 
         frame = ctk.CTkFrame(self.janela_temporizador)
         frame.pack(pady=20, padx=20, fill="both", expand=True)
@@ -243,6 +249,8 @@ class App(ctk.CTk):
         self.janela_despertador.geometry("650x700")
         self.janela_despertador.title("Despertador")
         self.janela_despertador.resizable(False, False)
+        self.janela_despertador.lift()                     
+        self.janela_despertador.focus_force()  
 
         main_frame = ctk.CTkFrame(self.janela_despertador)
         main_frame.pack(pady=20, padx=20, fill="both", expand=True)
@@ -310,6 +318,8 @@ class App(ctk.CTk):
         self.janela_config = ctk.CTkToplevel(self)
         self.janela_config.geometry("350x450")
         self.janela_config.title("Configurar Alarme")
+        self.janela_config.lift()                     
+        self.janela_config.focus_force()  
 
         self.var_hora = ctk.IntVar(value=alarme["hora"] if editar else 0)
         self.var_minuto = ctk.IntVar(value=alarme["minuto"] if editar else 0)
@@ -484,6 +494,8 @@ class App(ctk.CTk):
         janela.geometry("350x200")
         janela.title("⏰ Alarme Tocando!")
         janela.resizable(False, False)
+        self.lift()                     
+        self.focus_force()  
         
         frame = ctk.CTkFrame(janela)
         frame.pack(pady=30, padx=20, fill="both", expand=True)
@@ -534,6 +546,7 @@ class App(ctk.CTk):
 
     # ---------------------------------------------------#
     # Métodos auxiliares
+
     def atualizar_interface(self, tempo_ms, label):
         tempo_formatado = formatar_tempo(int(tempo_ms))
         label.configure(text=tempo_formatado)
@@ -545,7 +558,9 @@ class App(ctk.CTk):
             messagebox.showwarning(titulo, mensagem)
         else:
             messagebox.showinfo(titulo, mensagem)
-            
+
+
+
 if __name__ == "__main__":
     app = App()
     app.mainloop()
