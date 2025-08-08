@@ -1,12 +1,12 @@
 import datetime
 import os
 import threading
+import utils
 import customtkinter as ctk # type: ignore
 from tkinter import Listbox, messagebox  
 from cronometro import Cronometro
 from despertador import Despertador
 from temporizador import Temporizador
-from formatador_tempo import formatar_tempo
 from playsound import playsound  # type: ignore
 
 ctk.set_appearance_mode("System")
@@ -15,18 +15,15 @@ ctk.set_default_color_theme("blue")
 class App(ctk.CTk):
     def __init__(self):
         super().__init__()
-        
 
         self.title("Relógio Inteligente")
         self.geometry("350x400")
-        self.resizable(False, False)
-        self.lift()                     
-        self.focus_force()               
-        
+        self.resizable(True, True)
+
         self.main_frame = ctk.CTkFrame(self)
         self.main_frame.pack(pady=20, padx=20, fill="both", expand=True)
-        
-        # Botões 
+
+        # Botões
         self.btn_cronometro = ctk.CTkButton(
             self.main_frame, 
             text="⏱️ Cronômetro",
@@ -35,7 +32,7 @@ class App(ctk.CTk):
             corner_radius=10
         )
         self.btn_cronometro.pack(pady=10, fill="x")
-        
+
         self.btn_temporizador = ctk.CTkButton(
             self.main_frame, 
             text="⏲️ Temporizador",
@@ -44,7 +41,7 @@ class App(ctk.CTk):
             corner_radius=10
         )
         self.btn_temporizador.pack(pady=10, fill="x")
-        
+
         self.btn_despertador = ctk.CTkButton(
             self.main_frame, 
             text="⏰ Despertador",
@@ -70,13 +67,14 @@ class App(ctk.CTk):
         self.janela_cronometro = ctk.CTkToplevel(self)
         self.janela_cronometro.geometry("350x350")
         self.janela_cronometro.title("Cronômetro")
-        self.janela_cronometro.resizable(False, False)
+        self.janela_cronometro.resizable(True, True)
         self.janela_cronometro.lift()                     
         self.janela_cronometro.focus_force()  
-        self.janela_cronometro.attributes("-topmost", True)
 
         frame = ctk.CTkFrame(self.janela_cronometro)
         frame.pack(pady=20, padx=20, fill="both", expand=True)
+
+        utils.abrir_janela_em_foco(self.janela_cronometro, master=self)
 
         self.label_cronometro = ctk.CTkLabel(
             frame,
@@ -116,7 +114,7 @@ class App(ctk.CTk):
 
     def iniciar_cronometro(self):
         self.cronometro.iniciar_cronometro(
-            callback=lambda tempo: self.atualizar_interface(tempo, self.label_cronometro)
+            callback=lambda tempo: utils.atualizar_interface(tempo, self.label_cronometro)
         )
 
     def parar_cronometro(self):
@@ -127,7 +125,7 @@ class App(ctk.CTk):
         self.label_cronometro.configure(text="00:00:00:000")
 
     # ---------------------------------------------------#
-    # Temporizador 
+    # Temporizador
     def abrir_temporizador(self):
         if hasattr(self, 'janela_temporizador') and self.janela_temporizador.winfo_exists():
             self.janela_temporizador.lift()
@@ -136,13 +134,14 @@ class App(ctk.CTk):
         self.janela_temporizador = ctk.CTkToplevel(self)
         self.janela_temporizador.geometry("350x450")
         self.janela_temporizador.title("Temporizador")
-        self.janela_temporizador.resizable(False, False)
+        self.janela_temporizador.resizable(True, True)
         self.janela_temporizador.lift()                     
         self.janela_temporizador.focus_force()  
-        self.janela_temporizador.attributes("-topmost", True)   
 
         frame = ctk.CTkFrame(self.janela_temporizador)
         frame.pack(pady=20, padx=20, fill="both", expand=True)
+
+        utils.abrir_janela_em_foco(self.janela_temporizador, master=self)
 
         entrada_frame = ctk.CTkFrame(frame, fg_color="transparent")
         entrada_frame.pack(pady=10)
@@ -212,7 +211,7 @@ class App(ctk.CTk):
             tempo_total_ms = (horas * 3600 + minutos * 60 + segundos) * 1000
 
             if tempo_total_ms <= 0:
-                self.mostrar_mensagem("Erro", "Digite um tempo maior que zero.", "warning")
+                utils.mostrar_mensagem("Erro", "Digite um tempo maior que zero.", "warning")
                 return
 
             self.entrada_horas.configure(state="disabled")
@@ -224,10 +223,10 @@ class App(ctk.CTk):
                 hora=horas,
                 minuto=minutos,
                 segundo=segundos,
-                callback=lambda tempo: self.atualizar_interface(tempo, self.label_temporizador)
+                callback=lambda tempo: utils.atualizar_interface(tempo, self.label_temporizador)
             )
         except ValueError:
-            self.mostrar_mensagem("Erro", "Por favor, insira apenas números.", "error")
+            utils.mostrar_mensagem("Erro", "Por favor, insira apenas números.", "error")
             self.resetar_temporizador()
 
     def parar_temporizador(self):
@@ -241,7 +240,7 @@ class App(ctk.CTk):
         self.entrada_segundos.configure(state="normal")
 
     # ---------------------------------------------------#
-    # Despertador 
+    # Despertador
     def abrir_despertador(self):
         if hasattr(self, 'janela_despertador') and self.janela_despertador.winfo_exists():
             self.janela_despertador.lift()
@@ -250,13 +249,14 @@ class App(ctk.CTk):
         self.janela_despertador = ctk.CTkToplevel(self)
         self.janela_despertador.geometry("650x700")
         self.janela_despertador.title("Despertador")
-        self.janela_despertador.resizable(False, False)
+        self.janela_despertador.resizable(True, True)
         self.janela_despertador.lift()                     
         self.janela_despertador.focus_force()  
-        self.janela_despertador.attributes("-topmost", True)
 
         main_frame = ctk.CTkFrame(self.janela_despertador)
         main_frame.pack(pady=20, padx=20, fill="both", expand=True)
+
+        utils.abrir_janela_em_foco(self.janela_despertador, master=self)
 
         btn_frame = ctk.CTkFrame(main_frame, fg_color="transparent")
         btn_frame.pack(pady=10)
@@ -291,10 +291,10 @@ class App(ctk.CTk):
             selectbackground="#4a6baf",
             selectforeground="white"
         )
-        
+
         scrollbar = ctk.CTkScrollbar(lista_frame, command=self.lista_despertadores.yview)
         self.lista_despertadores.configure(yscrollcommand=scrollbar.set)
-        
+
         self.lista_despertadores.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
 
@@ -311,19 +311,25 @@ class App(ctk.CTk):
     def alterar_alarme(self):
         selecionados = self.lista_despertadores.curselection()
         if len(selecionados) != 1:
-            self.mostrar_mensagem("Aviso", "Selecione apenas um alarme para alterar.", "warning")
+            utils.mostrar_mensagem("Aviso", "Selecione apenas um alarme para alterar.", "warning")
             return
         index = selecionados[0]
         alarme = self.despertador.alarmes[index]
         self.config_alarme(editar=True, alarme=alarme)
 
     def config_alarme(self, editar=False, alarme=None):
+        if hasattr(self, "janela_config") and self.janela_config.winfo_exists():
+            self.janela_config.lift()
+            return
+
         self.janela_config = ctk.CTkToplevel(self)
         self.janela_config.geometry("350x450")
         self.janela_config.title("Configurar Alarme")
+        self.janela_config.resizable(True, True)
         self.janela_config.lift()                     
         self.janela_config.focus_force()  
-        self.janela_config.attributes("-topmost", True)
+
+        utils.abrir_janela_em_foco(self.janela_config, master=self)
 
         self.var_hora = ctk.IntVar(value=alarme["hora"] if editar else 0)
         self.var_minuto = ctk.IntVar(value=alarme["minuto"] if editar else 0)
@@ -368,7 +374,7 @@ class App(ctk.CTk):
             if editar:
                 var.set(dia in alarme["dias"])
             self.vars_dias[dia] = var
-            
+
             cb = ctk.CTkCheckBox(
                 dias_frame,
                 text=dia,
@@ -384,11 +390,11 @@ class App(ctk.CTk):
             self.sons_disponiveis = [f for f in os.listdir(pasta_audio) if f.endswith((".mp3", ".wav"))]
         except FileNotFoundError:
             self.sons_disponiveis = []
-            self.mostrar_mensagem("Erro", f"Pasta de áudio não encontrada:\n{pasta_audio}", "error")
+            utils.mostrar_mensagem("Erro", f"Pasta de áudio não encontrada:\n{pasta_audio}", "error")
             return
 
         if not self.sons_disponiveis:
-            self.mostrar_mensagem("Erro", "Nenhum som de alarme encontrado na pasta 'media/aud'.", "error")
+            utils.mostrar_mensagem("Erro", "Nenhum som de alarme encontrado na pasta 'media/aud'.", "error")
             return
 
         if editar:
@@ -424,9 +430,9 @@ class App(ctk.CTk):
         try:
             hora = int(self.var_hora.get())
             minuto = int(self.var_minuto.get())
-            
+
             if not (0 <= hora <= 23 and 0 <= minuto <= 59):
-                self.mostrar_mensagem("Erro", "Hora ou minuto inválidos", "warning")
+                utils.mostrar_mensagem("Erro", "Hora ou minuto inválidos", "warning")
                 return
 
             repetir = self.var_repetir.get()
@@ -437,7 +443,7 @@ class App(ctk.CTk):
                 self.despertador.delete_alarme(alarme_antigo["hora"], alarme_antigo["minuto"])
 
             if repetir and not dias:
-                self.mostrar_mensagem("Erro", "Selecione ao menos um dia para repetir o alarme.", "warning")
+                utils.mostrar_mensagem("Erro", "Selecione ao menos um dia para repetir o alarme.", "warning")
                 return
 
             success = self.despertador.adicionar_alarme(
@@ -453,10 +459,10 @@ class App(ctk.CTk):
                 self.atualizar_lista_despertadores()
                 self.janela_config.destroy()
             else:
-                self.mostrar_mensagem("Erro", "Não foi possível adicionar o alarme", "error")
-                
+                utils.mostrar_mensagem("Erro", "Não foi possível adicionar o alarme", "error")
+
         except ValueError:
-            self.mostrar_mensagem("Erro", "Por favor, insira valores numéricos válidos.", "error")
+            utils.mostrar_mensagem("Erro", "Por favor, insira valores numéricos válidos.", "error")
 
     def delete_despertador(self, alarme_especifico=None):
         if alarme_especifico:
@@ -474,9 +480,9 @@ class App(ctk.CTk):
     def habilitar_despertador(self):
         selecionados = self.lista_despertadores.curselection()
         if not selecionados:
-            self.mostrar_mensagem("Aviso", "Nenhum alarme selecionado", "warning")
+            utils.mostrar_mensagem("Aviso", "Nenhum alarme selecionado", "warning")
             return
-            
+
         for i in selecionados:
             alarme = self.despertador.alarmes[i]
             self.despertador.ativar_alarme(alarme["hora"], alarme["minuto"])
@@ -485,48 +491,53 @@ class App(ctk.CTk):
     def desabilitar_despertador(self):
         selecionados = self.lista_despertadores.curselection()
         if not selecionados:
-            self.mostrar_mensagem("Aviso", "Nenhum alarme selecionado", "warning")
+            utils.mostrar_mensagem("Aviso", "Nenhum alarme selecionado", "warning")
             return
-            
+
         for i in selecionados:
             alarme = self.despertador.alarmes[i]
             self.despertador.desativar_alarme(alarme["hora"], alarme["minuto"])
         self.atualizar_lista_despertadores()
 
     def tocando_despertador(self, nome_audio):
-        janela = ctk.CTkToplevel(self)
-        janela.geometry("350x200")
-        janela.title("⏰ Alarme Tocando!")
-        janela.resizable(False, False)
-        self.lift()                     
-        self.focus_force()  
-        janela.attributes("-topmost", True)
-        
-        frame = ctk.CTkFrame(janela)
+        if hasattr(self, 'janela') and self.janela_tocandoDespertador.winfo_exists():
+            self.janela_tocandoDespertador.lift()
+            return
+
+        self.janela_tocandoDespertador = ctk.CTkToplevel(self)
+        self.janela_tocandoDespertador.geometry("350x200")
+        self.janela_tocandoDespertador.title("⏰ Alarme Tocando!")
+        self.janela_tocandoDespertador.resizable(True, True)
+        self.janela_tocandoDespertador.lift()                     
+        self.janela_tocandoDespertador.focus_force()  
+
+        frame = ctk.CTkFrame(self.janela_tocandoDespertador)
         frame.pack(pady=30, padx=20, fill="both", expand=True)
-        
+
+        utils.abrir_janela_em_foco(self.janela_tocandoDespertador, master=self)
+
         ctk.CTkLabel(
             frame,
             text="⏰ Alarme!",
             font=("Arial", 24)
         ).pack(pady=10)
-        
+
         btn_frame = ctk.CTkFrame(frame, fg_color="transparent")
         btn_frame.pack()
-        
+
         ctk.CTkButton(
             btn_frame,
             text="Parar",
-            command=lambda: [janela.destroy(), self.parar_alarme()],
+            command=lambda: [self.janela_tocandoDespertador.destroy(), self.parar_alarme()],
             width=100,
             fg_color="#d9534f",
             hover_color="#c9302c"
         ).pack(side="left", padx=20)
-        
+
         ctk.CTkButton(
             btn_frame,
             text="Soneca (5 min)",
-            command=lambda: [janela.destroy(), self.soneca_alarme(5)],
+            command=lambda: [self.janela_tocandoDespertador.destroy(), self.soneca_alarme(5)],
             width=100
         ).pack(side="right", padx=20)
 
@@ -539,7 +550,7 @@ class App(ctk.CTk):
                     daemon=True
                 ).start()
         except Exception as e:
-            self.mostrar_mensagem("Erro", f"Não foi possível reproduzir o áudio: {str(e)}", "error")
+            utils.mostrar_mensagem("Erro", f"Não foi possível reproduzir o áudio: {str(e)}", "error")
 
     def soneca_alarme(self, minutos):
         agora = datetime.datetime.now()
@@ -548,22 +559,6 @@ class App(ctk.CTk):
     def parar_alarme(self):
         agora = datetime.datetime.now()
         self.despertador.parar_alarme(agora.hour, agora.minute)
-
-    # ---------------------------------------------------#
-    # Métodos auxiliares
-
-    def atualizar_interface(self, tempo_ms, label):
-        tempo_formatado = formatar_tempo(int(tempo_ms))
-        label.configure(text=tempo_formatado)
-
-    def mostrar_mensagem(self, titulo, mensagem, tipo):
-        if tipo == "error":
-            messagebox.showerror(titulo, mensagem)
-        elif tipo == "warning":
-            messagebox.showwarning(titulo, mensagem)
-        else:
-            messagebox.showinfo(titulo, mensagem)
-
 
 
 if __name__ == "__main__":
