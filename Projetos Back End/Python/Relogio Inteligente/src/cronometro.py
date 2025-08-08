@@ -25,14 +25,14 @@ class Cronometro:
         ultimo_tempo = time.perf_counter()
 
         while self.rodando:
-            time.sleep(0.1)
+            time.sleep(0.045)
             agora = time.perf_counter()
             delta = agora - ultimo_tempo
             self.tempo += delta
             ultimo_tempo = agora
             
             if self._callback:
-                self._callback(self.tempo)
+                self._callback(self.tempo *1000)
 
     def parar_cronometro(self):
         self.rodando = False
@@ -40,5 +40,5 @@ class Cronometro:
             self._thread.join(timeout=0.1)
 
     def resetar_cronometro(self):
-        self.parar_cronometro()
+        self.rodando = False
         self.tempo = 0.0

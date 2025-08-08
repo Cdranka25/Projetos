@@ -68,8 +68,6 @@ class App(ctk.CTk):
         self.janela_cronometro.geometry("350x350")
         self.janela_cronometro.title("Cronômetro")
         self.janela_cronometro.resizable(True, True)
-        self.janela_cronometro.lift()                     
-        self.janela_cronometro.focus_force()  
 
         frame = ctk.CTkFrame(self.janela_cronometro)
         frame.pack(pady=20, padx=20, fill="both", expand=True)
@@ -135,8 +133,6 @@ class App(ctk.CTk):
         self.janela_temporizador.geometry("350x450")
         self.janela_temporizador.title("Temporizador")
         self.janela_temporizador.resizable(True, True)
-        self.janela_temporizador.lift()                     
-        self.janela_temporizador.focus_force()  
 
         frame = ctk.CTkFrame(self.janela_temporizador)
         frame.pack(pady=20, padx=20, fill="both", expand=True)
@@ -250,8 +246,6 @@ class App(ctk.CTk):
         self.janela_despertador.geometry("650x700")
         self.janela_despertador.title("Despertador")
         self.janela_despertador.resizable(True, True)
-        self.janela_despertador.lift()                     
-        self.janela_despertador.focus_force()  
 
         main_frame = ctk.CTkFrame(self.janela_despertador)
         main_frame.pack(pady=20, padx=20, fill="both", expand=True)
@@ -326,8 +320,6 @@ class App(ctk.CTk):
         self.janela_config.geometry("350x450")
         self.janela_config.title("Configurar Alarme")
         self.janela_config.resizable(True, True)
-        self.janela_config.lift()                     
-        self.janela_config.focus_force()  
 
         utils.abrir_janela_em_foco(self.janela_config, master=self)
 
@@ -508,8 +500,6 @@ class App(ctk.CTk):
         self.janela_tocandoDespertador.geometry("350x200")
         self.janela_tocandoDespertador.title("⏰ Alarme Tocando!")
         self.janela_tocandoDespertador.resizable(True, True)
-        self.janela_tocandoDespertador.lift()                     
-        self.janela_tocandoDespertador.focus_force()  
 
         frame = ctk.CTkFrame(self.janela_tocandoDespertador)
         frame.pack(pady=30, padx=20, fill="both", expand=True)
