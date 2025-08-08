@@ -240,7 +240,7 @@ class App(ctk.CTk):
             return
 
         self.janela_despertador = ctk.CTkToplevel(self)
-        self.janela_despertador.geometry("450x550")
+        self.janela_despertador.geometry("650x700")
         self.janela_despertador.title("Despertador")
         self.janela_despertador.resizable(False, False)
 
@@ -263,7 +263,7 @@ class App(ctk.CTk):
                 btn_frame,
                 text=text,
                 command=command,
-                width=100,
+                width=110,
                 height=30
             )
             btn.pack(side="left", padx=2)
