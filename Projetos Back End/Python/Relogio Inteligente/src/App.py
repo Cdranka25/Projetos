@@ -1,13 +1,13 @@
 import datetime
 import os
 import threading
-import customtkinter as ctk
+import customtkinter as ctk # type: ignore
 from tkinter import Listbox, messagebox  
 from cronometro import Cronometro
 from despertador import Despertador
 from temporizador import Temporizador
 from formatador_tempo import formatar_tempo
-from playsound import playsound
+from playsound import playsound  # type: ignore
 
 ctk.set_appearance_mode("System")
 ctk.set_default_color_theme("blue")  
@@ -73,6 +73,7 @@ class App(ctk.CTk):
         self.janela_cronometro.resizable(False, False)
         self.janela_cronometro.lift()                     
         self.janela_cronometro.focus_force()  
+        self.janela_cronometro.attributes("-topmost", True)
 
         frame = ctk.CTkFrame(self.janela_cronometro)
         frame.pack(pady=20, padx=20, fill="both", expand=True)
@@ -138,6 +139,7 @@ class App(ctk.CTk):
         self.janela_temporizador.resizable(False, False)
         self.janela_temporizador.lift()                     
         self.janela_temporizador.focus_force()  
+        self.janela_temporizador.attributes("-topmost", True)   
 
         frame = ctk.CTkFrame(self.janela_temporizador)
         frame.pack(pady=20, padx=20, fill="both", expand=True)
@@ -251,6 +253,7 @@ class App(ctk.CTk):
         self.janela_despertador.resizable(False, False)
         self.janela_despertador.lift()                     
         self.janela_despertador.focus_force()  
+        self.janela_despertador.attributes("-topmost", True)
 
         main_frame = ctk.CTkFrame(self.janela_despertador)
         main_frame.pack(pady=20, padx=20, fill="both", expand=True)
@@ -320,6 +323,7 @@ class App(ctk.CTk):
         self.janela_config.title("Configurar Alarme")
         self.janela_config.lift()                     
         self.janela_config.focus_force()  
+        self.janela_config.attributes("-topmost", True)
 
         self.var_hora = ctk.IntVar(value=alarme["hora"] if editar else 0)
         self.var_minuto = ctk.IntVar(value=alarme["minuto"] if editar else 0)
@@ -496,6 +500,7 @@ class App(ctk.CTk):
         janela.resizable(False, False)
         self.lift()                     
         self.focus_force()  
+        janela.attributes("-topmost", True)
         
         frame = ctk.CTkFrame(janela)
         frame.pack(pady=30, padx=20, fill="both", expand=True)
