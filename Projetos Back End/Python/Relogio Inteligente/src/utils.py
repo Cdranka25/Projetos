@@ -1,10 +1,9 @@
-
-
 from tkinter import messagebox
-
+from PIL import Image
+import customtkinter as ctk
+import os
 
 def formatar_tempo(ms):
-
     if ms < 0:
         raise ValueError("Tempo não pode ser negativo")
     
@@ -26,12 +25,10 @@ def abrir_janela_em_foco(janela, master=None):
     largura = janela.winfo_width()
     altura = janela.winfo_height()
 
-    if master:
-        
+    if master:        
         x = master.winfo_rootx() + (master.winfo_width() // 2) - (largura // 2)
         y = master.winfo_rooty() + (master.winfo_height() // 2) - (altura // 2)
-    else:
-        
+    else:        
         largura_tela = janela.winfo_screenwidth()
         altura_tela = janela.winfo_screenheight()
         x = (largura_tela // 2) - (largura // 2)
@@ -50,3 +47,24 @@ def mostrar_mensagem(titulo, mensagem, tipo):
         messagebox.showwarning(titulo, mensagem)
     else:
         messagebox.showinfo(titulo, mensagem)
+
+def carregar_icone(janela, caminho_icone):
+    try:
+        
+        if not os.path.exists(caminho_icone):
+            print(f"Arquivo de ícone não encontrado: {caminho_icone}")
+            return False
+
+        
+        if os.name == 'nt':  
+            janela.iconbitmap(caminho_icone)
+        else:  
+            from PIL import ImageTk
+            img = Image.open(caminho_icone)
+            photo = ImageTk.PhotoImage(img)
+            janela.wm_iconphoto(True, photo)
+        
+        return True
+    except Exception as e:
+        print(f"Erro ao carregar ícone: {e}")
+        return False

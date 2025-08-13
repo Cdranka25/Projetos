@@ -1,27 +1,79 @@
 import datetime
 import os
+import pygame
+import time
 import threading
 import utils
-import customtkinter as ctk # type: ignore
+import customtkinter as ctk 
 from tkinter import Listbox, messagebox  
 from cronometro import Cronometro
 from despertador import Despertador
 from temporizador import Temporizador
-from playsound import playsound  # type: ignore
+from relogio import Relogio
+from playsound import playsound   
+# pip install playsound==1.2.2
+# pip install customtkinter
+# pip install pygame
+# pip install pillow
 
 ctk.set_appearance_mode("System")
 ctk.set_default_color_theme("blue")  
 
 class App(ctk.CTk):
+
     def __init__(self):
         super().__init__()
 
         self.title("Relógio Inteligente")
-        self.geometry("350x400")
+        self.geometry("350x500")
         self.resizable(True, True)
 
+        self.BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    
+
+        caminho_icone = os.path.join(self.BASE_DIR, "..", "media", "img", "despertador.png")
+        
+
+        print(f"Procurando ícone em: {caminho_icone}")
+        print(f"Arquivo existe? {os.path.exists(caminho_icone)}")
+        
+        utils.carregar_icone(self, caminho_icone)
+
+        self.relogio = Relogio()
+        self.horario_atual = self.relogio.obter_horario()
+        
+        # Frame principal
         self.main_frame = ctk.CTkFrame(self)
         self.main_frame.pack(pady=20, padx=20, fill="both", expand=True)
+
+        self.clock_frame = ctk.CTkFrame(self.main_frame)
+        self.clock_frame.pack(pady=(0, 20), fill="x")
+
+        self.lbl_horario = ctk.CTkLabel(
+            self.clock_frame,
+            text="",
+            font=("Helvetica", 36, "bold"),
+            anchor="center"
+        )
+        self.lbl_horario.pack(pady=(10, 5), fill="x")
+
+        self.lbl_data = ctk.CTkLabel(
+            self.clock_frame,
+            text="",
+            font=("Helvetica", 14),
+            anchor="center"
+        )
+        self.lbl_data.pack(pady=(0, 5), fill="x")
+
+        self.lbl_localizacao = ctk.CTkLabel(
+            self.clock_frame,
+            text="",
+            font=("Helvetica", 12),
+            anchor="center"
+        )
+        self.lbl_localizacao.pack(pady=(0, 10), fill="x")
+
+        self.atualizar_relogio()
 
         # Botões
         self.btn_cronometro = ctk.CTkButton(
@@ -54,8 +106,28 @@ class App(ctk.CTk):
         self.cronometro = Cronometro()
         self.temporizador = Temporizador()
         self.despertador = Despertador()
+        pygame.mixer.init()
+        self.alarme_tocando = False
+        self.audio_alarme = None
 
         self.BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+    def atualizar_relogio(self):
+        self.horario_atual = self.relogio.obter_horario()
+        
+        if self.horario_atual:
+            self.lbl_horario.configure(text=self.horario_atual.strftime("%H:%M:%S"))
+            
+            dia_semana = self.relogio.obter_dia_semana_ptbr(self.horario_atual)
+            self.lbl_data.configure(text=f"{dia_semana}, {self.horario_atual.strftime('%d/%m/%Y')}")
+            
+            if self.relogio.geo_data:
+                localizacao = f"{self.relogio.geo_data.get('city', '')}, {self.relogio.geo_data.get('country', '')}"
+                self.lbl_localizacao.configure(text=localizacao)
+            else:
+                self.lbl_localizacao.configure(text=self.relogio.fuso_padrao)
+    
+        self.after(1000, self.atualizar_relogio)
 
     # ---------------------------------------------------#
     # Cronômetro
@@ -65,7 +137,7 @@ class App(ctk.CTk):
             return
 
         self.janela_cronometro = ctk.CTkToplevel(self)
-        self.janela_cronometro.geometry("350x350")
+        self.janela_cronometro.geometry("350x170")
         self.janela_cronometro.title("Cronômetro")
         self.janela_cronometro.resizable(True, True)
 
@@ -130,35 +202,42 @@ class App(ctk.CTk):
             return
 
         self.janela_temporizador = ctk.CTkToplevel(self)
-        self.janela_temporizador.geometry("350x450")
+        self.janela_temporizador.geometry("400x300")
         self.janela_temporizador.title("Temporizador")
         self.janela_temporizador.resizable(True, True)
 
         frame = ctk.CTkFrame(self.janela_temporizador)
         frame.pack(pady=20, padx=20, fill="both", expand=True)
-
-        utils.abrir_janela_em_foco(self.janela_temporizador, master=self)
+        
+        label_font = ("Arial", 16)  
+        entry_font = ("Arial", 14)  
+        entry_width = 80 
+        entry_height = 40  
 
         entrada_frame = ctk.CTkFrame(frame, fg_color="transparent")
-        entrada_frame.pack(pady=10)
+        entrada_frame.pack(pady=15)
 
-        ctk.CTkLabel(entrada_frame, text="Horas:").pack()
+        entrada_frame.grid_columnconfigure(0, weight=1)
+        entrada_frame.grid_columnconfigure(1, weight=1)
+        entrada_frame.grid_columnconfigure(2, weight=1)
+
+        ctk.CTkLabel(entrada_frame, text="Horas").grid(row=0, column=0, padx=5)
         self.entrada_horas = ctk.CTkEntry(entrada_frame, width=60, validate="key")
         self.entrada_horas.configure(validatecommand=(self.register(self.validar_numerico), '%P'))
         self.entrada_horas.insert(0, "00")
-        self.entrada_horas.pack(pady=5)
+        self.entrada_horas.grid(row=1, column=0, padx=5, pady=5)
 
-        ctk.CTkLabel(entrada_frame, text="Minutos:").pack()
+        ctk.CTkLabel(entrada_frame, text="Minutos").grid(row=0, column=1, padx=5)
         self.entrada_minutos = ctk.CTkEntry(entrada_frame, width=60, validate="key")
         self.entrada_minutos.configure(validatecommand=(self.register(self.validar_numerico), '%P'))
         self.entrada_minutos.insert(0, "00")
-        self.entrada_minutos.pack(pady=5)
+        self.entrada_minutos.grid(row=1, column=1, padx=5, pady=5)
 
-        ctk.CTkLabel(entrada_frame, text="Segundos:").pack()
+        ctk.CTkLabel(entrada_frame, text="Segundos").grid(row=0, column=2, padx=5)
         self.entrada_segundos = ctk.CTkEntry(entrada_frame, width=60, validate="key")
         self.entrada_segundos.configure(validatecommand=(self.register(self.validar_numerico), '%P'))
         self.entrada_segundos.insert(0, "00")
-        self.entrada_segundos.pack(pady=5)
+        self.entrada_segundos.grid(row=1, column=2, padx=5, pady=5)
 
         self.label_temporizador = ctk.CTkLabel(
             frame,
@@ -168,8 +247,9 @@ class App(ctk.CTk):
         self.label_temporizador.pack(pady=20)
 
         btn_frame = ctk.CTkFrame(frame, fg_color="transparent")
-        btn_frame.pack()
+        btn_frame.pack(pady=10)
 
+        # Botões
         self.btn_iniciar_temporizador = ctk.CTkButton(
             btn_frame,
             text="Iniciar",
@@ -196,6 +276,9 @@ class App(ctk.CTk):
         )
         self.btn_resetar_temporizador.pack(side="left", padx=5)
 
+        self.janela_temporizador.focus()
+        self.janela_temporizador.grab_set()
+
     def validar_numerico(self, texto):
         return texto.isdigit() or texto == ""
 
@@ -214,26 +297,47 @@ class App(ctk.CTk):
             self.entrada_minutos.configure(state="disabled")
             self.entrada_segundos.configure(state="disabled")
 
+            def callback_com_alarme(tempo):
+                utils.atualizar_interface(tempo, self.label_temporizador)
+                if tempo <= 0:
+                    self.tocar_alarme_temporizador()
+
             self.temporizador.definir_tempo(tempo_total_ms)
             self.temporizador.iniciar_temporizador(
                 hora=horas,
                 minuto=minutos,
                 segundo=segundos,
-                callback=lambda tempo: utils.atualizar_interface(tempo, self.label_temporizador)
+                callback=callback_com_alarme
             )
         except ValueError:
             utils.mostrar_mensagem("Erro", "Por favor, insira apenas números.", "error")
             self.resetar_temporizador()
 
+    def tocar_alarme_temporizador(self):
+        caminho_audio = os.path.join(self.BASE_DIR, "..", "media", "aud", "Basic Alarm.mp3")
+        try:
+            if os.path.exists(caminho_audio):
+                pygame.mixer.music.load(caminho_audio)
+                pygame.mixer.music.play(-1) 
+            else:
+                utils.mostrar_mensagem("Erro", "Arquivo de alarme não encontrado.", "error")
+        except Exception as e:
+            utils.mostrar_mensagem("Erro", f"Não foi possível reproduzir o alarme: {str(e)}", "error")
+
     def parar_temporizador(self):
         self.temporizador.parar_temporizador()
-
+        
     def resetar_temporizador(self):
         self.temporizador.resetar_temporizador()
         self.label_temporizador.configure(text="00:00:00:000")
+
         self.entrada_horas.configure(state="normal")
         self.entrada_minutos.configure(state="normal")
         self.entrada_segundos.configure(state="normal")
+
+    def parar_alarme_temporizador(self):
+        pygame.mixer.music.stop()
+
 
     # ---------------------------------------------------#
     # Despertador
@@ -317,9 +421,9 @@ class App(ctk.CTk):
             return
 
         self.janela_config = ctk.CTkToplevel(self)
-        self.janela_config.geometry("350x450")
+        self.janela_config.geometry("430x450")  
         self.janela_config.title("Configurar Alarme")
-        self.janela_config.resizable(True, True)
+        self.janela_config.resizable(False, False)
 
         utils.abrir_janela_em_foco(self.janela_config, master=self)
 
@@ -328,9 +432,14 @@ class App(ctk.CTk):
         self.var_repetir = ctk.BooleanVar(value=alarme["repetir"] if editar else False)
         self.var_audio = ctk.StringVar()
 
-        ctk.CTkLabel(self.janela_config, text="Hora:").pack()
+        time_frame = ctk.CTkFrame(self.janela_config, fg_color="transparent")
+        time_frame.pack(pady=10)
+
+        hora_frame = ctk.CTkFrame(time_frame, fg_color="transparent")
+        hora_frame.pack(side="left", padx=10)
+        ctk.CTkLabel(hora_frame, text="Hora:").pack()
         self.entrada_hora_alarme = ctk.CTkEntry(
-            self.janela_config,
+            hora_frame,
             textvariable=self.var_hora,
             width=60,
             validate="key"
@@ -338,9 +447,11 @@ class App(ctk.CTk):
         self.entrada_hora_alarme.configure(validatecommand=(self.register(self.validar_numerico), '%P'))
         self.entrada_hora_alarme.pack()
 
-        ctk.CTkLabel(self.janela_config, text="Minuto:").pack()
+        minuto_frame = ctk.CTkFrame(time_frame, fg_color="transparent")
+        minuto_frame.pack(side="left", padx=10)
+        ctk.CTkLabel(minuto_frame, text="Minuto:").pack()
         self.entrada_minuto_alarme = ctk.CTkEntry(
-            self.janela_config,
+            minuto_frame,
             textvariable=self.var_minuto,
             width=60,
             validate="key"
@@ -348,6 +459,16 @@ class App(ctk.CTk):
         self.entrada_minuto_alarme.configure(validatecommand=(self.register(self.validar_numerico), '%P'))
         self.entrada_minuto_alarme.pack()
 
+        def toggle_dias_semana():
+            for dia, var in self.vars_dias.items():
+                cb = getattr(self, f"cb_{dia}")
+                if self.var_repetir.get():
+                    cb.configure(state="normal")
+                else:
+                    cb.configure(state="disabled")
+                    var.set(False)
+
+        self.var_repetir.trace_add("write", lambda *args: toggle_dias_semana())
         ctk.CTkCheckBox(
             self.janela_config,
             text="Repetir semanalmente",
@@ -355,29 +476,50 @@ class App(ctk.CTk):
         ).pack(pady=10)
 
         ctk.CTkLabel(self.janela_config, text="Dias da Semana:").pack()
+
         dias_semana = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"]
         self.vars_dias = {}
 
         dias_frame = ctk.CTkFrame(self.janela_config, fg_color="transparent")
         dias_frame.pack()
 
-        for i, dia in enumerate(dias_semana):
+        linha1_frame = ctk.CTkFrame(dias_frame, fg_color="transparent")
+        linha1_frame.pack()
+        for dia in dias_semana[:4]:
             var = ctk.BooleanVar()
             if editar:
                 var.set(dia in alarme["dias"])
             self.vars_dias[dia] = var
-
+            
             cb = ctk.CTkCheckBox(
-                dias_frame,
+                linha1_frame,
                 text=dia,
-                variable=var
+                variable=var,
+                state="normal" if self.var_repetir.get() else "disabled"
             )
-            cb.grid(row=i//4, column=i%4, padx=5, pady=2)
+            cb.pack(side="left", padx=10, pady=5)
+            setattr(self, f"cb_{dia}", cb)
 
-        ctk.CTkLabel(self.janela_config, text="Som do Alarme:").pack(pady=10)
+        linha2_frame = ctk.CTkFrame(dias_frame, fg_color="transparent")
+        linha2_frame.pack(padx=18) 
+        for dia in dias_semana[4:]:
+            var = ctk.BooleanVar()
+            if editar:
+                var.set(dia in alarme["dias"])
+            self.vars_dias[dia] = var
+            
+            cb = ctk.CTkCheckBox(
+                linha2_frame,
+                text=dia,
+                variable=var,
+                state="normal" if self.var_repetir.get() else "disabled"
+            )
+            cb.pack(side="left", padx=10, pady=5)
+            setattr(self, f"cb_{dia}", cb)
+
+        ctk.CTkLabel(self.janela_config, text="Som do Alarme:").pack(pady=(10, 5))
 
         pasta_audio = os.path.join(self.BASE_DIR, "..", "media", "aud")
-
         try:
             self.sons_disponiveis = [f for f in os.listdir(pasta_audio) if f.endswith((".mp3", ".wav"))]
         except FileNotFoundError:
@@ -417,6 +559,7 @@ class App(ctk.CTk):
                 fg_color="#d9534f",
                 hover_color="#c9302c"
             ).pack(side="right", padx=10)
+
 
     def add_despertador(self, editar=False, alarme_antigo=None):
         try:
@@ -492,7 +635,7 @@ class App(ctk.CTk):
         self.atualizar_lista_despertadores()
 
     def tocando_despertador(self, nome_audio):
-        if hasattr(self, 'janela') and self.janela_tocandoDespertador.winfo_exists():
+        if hasattr(self, 'janela_tocandoDespertador') and self.janela_tocandoDespertador.winfo_exists():
             self.janela_tocandoDespertador.lift()
             return
 
@@ -534,11 +677,9 @@ class App(ctk.CTk):
         caminho_audio = os.path.join(self.BASE_DIR, "..", "media", "aud", nome_audio)
         try:
             if os.path.exists(caminho_audio):
-                threading.Thread(
-                    target=playsound,
-                    args=(caminho_audio,),
-                    daemon=True
-                ).start()
+                self.alarme_tocando = True
+                pygame.mixer.music.load(caminho_audio)
+                pygame.mixer.music.play(-1) 
         except Exception as e:
             utils.mostrar_mensagem("Erro", f"Não foi possível reproduzir o áudio: {str(e)}", "error")
 
@@ -546,10 +687,13 @@ class App(ctk.CTk):
         agora = datetime.datetime.now()
         self.despertador.soneca_alarme(agora.hour, agora.minute, minutos)
 
+
     def parar_alarme(self):
         agora = datetime.datetime.now()
         self.despertador.parar_alarme(agora.hour, agora.minute)
-
+        if self.alarme_tocando:
+            pygame.mixer.music.stop()  
+            self.alarme_tocando = False
 
 if __name__ == "__main__":
     app = App()
