@@ -11,7 +11,6 @@ from despertador import Despertador
 from temporizador import Temporizador
 from relogio import Relogio
 from playsound import playsound   
-# pip install playsound==1.2.2
 # pip install customtkinter
 # pip install pygame
 # pip install pillow
