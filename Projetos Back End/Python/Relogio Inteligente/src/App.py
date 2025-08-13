@@ -4,16 +4,17 @@ import pygame
 import time
 import threading
 import utils
-import customtkinter as ctk 
+import customtkinter as ctk  # type: ignore
 from tkinter import Listbox, messagebox  
 from cronometro import Cronometro
 from despertador import Despertador
 from temporizador import Temporizador
-from relogio import Relogio
-from playsound import playsound   
+from relogio import Relogio 
+# python -m pip install --upgrade pip
 # pip install customtkinter
 # pip install pygame
-# pip install pillow
+
+
 
 ctk.set_appearance_mode("System")
 ctk.set_default_color_theme("blue")  
@@ -316,12 +317,55 @@ class App(ctk.CTk):
         caminho_audio = os.path.join(self.BASE_DIR, "..", "media", "aud", "Basic Alarm.mp3")
         try:
             if os.path.exists(caminho_audio):
+                self.alarme_tocando = True  # Adiciona esta linha para controlar o estado
                 pygame.mixer.music.load(caminho_audio)
-                pygame.mixer.music.play(-1) 
+                pygame.mixer.music.play(-1)
+                
+                # Abre a janela para parar o alarme
+                self.abrir_janela_parar_alarme_temporizador()
             else:
                 utils.mostrar_mensagem("Erro", "Arquivo de alarme não encontrado.", "error")
         except Exception as e:
             utils.mostrar_mensagem("Erro", f"Não foi possível reproduzir o alarme: {str(e)}", "error")
+
+    def abrir_janela_parar_alarme_temporizador(self):
+        if hasattr(self, 'janela_parar_alarme_temporizador') and self.janela_parar_alarme_temporizador.winfo_exists():
+            self.janela_parar_alarme_temporizador.lift()
+            return
+
+        self.janela_parar_alarme_temporizador = ctk.CTkToplevel(self)
+        self.janela_parar_alarme_temporizador.geometry("350x200")
+        self.janela_parar_alarme_temporizador.title("⏰ Alarme do Temporizador!")
+        self.janela_parar_alarme_temporizador.resizable(True, True)
+
+        frame = ctk.CTkFrame(self.janela_parar_alarme_temporizador)
+        frame.pack(pady=30, padx=20, fill="both", expand=True)
+
+        utils.abrir_janela_em_foco(self.janela_parar_alarme_temporizador, master=self)
+
+        ctk.CTkLabel(
+            frame,
+            text="⏰ Temporizador Concluído!",
+            font=("Arial", 24)
+        ).pack(pady=10)
+
+        btn_frame = ctk.CTkFrame(frame, fg_color="transparent")
+        btn_frame.pack()
+
+        ctk.CTkButton(
+            btn_frame,
+            text="Parar",
+            command=lambda: [self.janela_parar_alarme_temporizador.destroy(), self.parar_alarme_temporizador()],
+            width=100,
+            fg_color="#d9534f",
+            hover_color="#c9302c"
+        ).pack(pady=20)
+
+    def parar_alarme_temporizador(self):
+        if self.alarme_tocando:
+            pygame.mixer.music.stop()
+            self.alarme_tocando = False
+        self.resetar_temporizador()
 
     def parar_temporizador(self):
         self.temporizador.parar_temporizador()
@@ -333,10 +377,6 @@ class App(ctk.CTk):
         self.entrada_horas.configure(state="normal")
         self.entrada_minutos.configure(state="normal")
         self.entrada_segundos.configure(state="normal")
-
-    def parar_alarme_temporizador(self):
-        pygame.mixer.music.stop()
-
 
     # ---------------------------------------------------#
     # Despertador

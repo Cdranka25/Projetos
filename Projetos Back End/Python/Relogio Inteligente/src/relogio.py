@@ -2,6 +2,7 @@ import datetime
 import requests
 from zoneinfo import ZoneInfo
 from typing import Dict, Optional
+
 class Relogio:
     def __init__(self, fuso_padrao: str = "America/Sao_Paulo"):
         self.fuso_padrao = fuso_padrao

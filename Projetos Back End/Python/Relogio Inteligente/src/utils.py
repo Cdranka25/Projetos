@@ -1,7 +1,9 @@
 from tkinter import messagebox
 from PIL import Image
-import customtkinter as ctk
+import customtkinter as ctk 
 import os
+# pip install pillow
+# pip install customtkinter
 
 def formatar_tempo(ms):
     if ms < 0:
