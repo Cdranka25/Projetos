@@ -2,6 +2,8 @@ import datetime
 import requests
 from zoneinfo import ZoneInfo
 from typing import Dict, Optional
+# pip install tzdata
+# pip install tzdata pillow
 
 class Relogio:
     def __init__(self, fuso_padrao: str = "America/Sao_Paulo"):
@@ -24,7 +26,6 @@ class Relogio:
             self.regiao = self.fuso_padrao
 
     def obter_horario(self) -> datetime.datetime:
-        """Obtém o horário atual usando a região já determinada"""
         try:
             self._localizacao = datetime.datetime.now(ZoneInfo(self.regiao))
         except Exception as e:

@@ -1,6 +1,6 @@
 from tkinter import messagebox
 from PIL import Image
-import customtkinter as ctk 
+import customtkinter as ctk # type: ignore
 import os
 # pip install pillow
 # pip install customtkinter

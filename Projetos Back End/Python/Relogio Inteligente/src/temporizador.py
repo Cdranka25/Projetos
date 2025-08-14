@@ -15,17 +15,19 @@ class Temporizador:
 
     def iniciar_temporizador(self, hora, minuto, segundo, callback=None):
         with self._lock:
-            if not (0 <= hora <= 23 and 0 <= minuto <= 59 and 0 <= segundo <= 59):
-                raise ValueError("Valores de tempo inválidos")
 
-            self.total_ms = (hora * 3600000) + (minuto * 60000) + (segundo * 1000)
-            self.tempo_restante = self.total_ms
-            self._callback = callback
+            if self.total_ms == 0 and self.tempo_restante == 0:
+                if not (0 <= hora <= 23 and 0 <= minuto <= 59 and 0 <= segundo <= 59):
+                    raise ValueError("Valores de tempo inválidos")
+                self.total_ms = (hora * 3600 + minuto * 60 + segundo) * 1000
+                self.tempo_restante = self.total_ms
 
-            if not self.rodando and self.total_ms > 0:
+            if callback:
+                self._callback = callback
+
+            if not self.rodando and self.tempo_restante > 0:
                 self.rodando = True
                 self._thread = threading.Thread(target=self.contar_temporizador)
-                self._thread.daemon = True
                 self._thread.start()
 
     def contar_temporizador(self):
@@ -36,8 +38,7 @@ class Temporizador:
                 if not self.rodando or self.tempo_restante <= 0:
                     self.rodando = False
                     if self.tempo_restante <= 0 and self._callback:
-                        self._callback(0) 
-                        self.tocar_alarme()
+                        self._callback(0)
                     break
 
             time.sleep(0.1)
@@ -55,50 +56,16 @@ class Temporizador:
                     if self._callback:
                         self._callback(self.tempo_restante)
 
-    def tocar_alarme(self):
 
-        def _tocar():
-            try:
-                pygame.mixer.init()
-                pygame.mixer.music.load("media/aud/Basic Alarm.mp3")  
-                pygame.mixer.music.play(-1)  
-                self._alarme_tocando = True
-                
-
-                while self._alarme_tocando:
-                    time.sleep(0.1)
-                    
-                pygame.mixer.music.stop()
-                pygame.mixer.quit()
-            except Exception as e:
-                print(f"Erro ao tocar alarme: {e}")
-
-        with self._lock:
-            if not self._alarme_tocando:
-                self._alarme_thread = threading.Thread(target=_tocar)
-                self._alarme_thread.daemon = True
-                self._alarme_thread.start()
-
-    def parar_alarme(self):
-
-        with self._lock:
-            self._alarme_tocando = False
-            if self._alarme_thread:
-                self._alarme_thread.join(timeout=0.5)
-
-    def parar_temporizador(self):
+    def para_temporizador(self):
         with self._lock:
             self.rodando = False
-            self.parar_alarme()
-            if self._thread:
-                self._thread.join(timeout=0.1)
 
-    def resetar_temporizador(self):
+    def reseta_temporizador(self):
         with self._lock:
             self.rodando = False
             self.tempo_restante = 0.0
             self.total_ms = 0.0
-            self.parar_alarme()
             if self._callback:
                 self._callback(0)
 

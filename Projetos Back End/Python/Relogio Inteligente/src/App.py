@@ -13,7 +13,7 @@ from relogio import Relogio
 # python -m pip install --upgrade pip
 # pip install customtkinter
 # pip install pygame
-
+# pip install pyinstaller
 
 
 ctk.set_appearance_mode("System")
@@ -29,7 +29,7 @@ class App(ctk.CTk):
         self.resizable(True, True)
 
         self.BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-    
+        pygame.mixer.init(frequency=44100, size=-16, channels=2, buffer=512)
 
         caminho_icone = os.path.join(self.BASE_DIR, "..", "media", "img", "despertador.png")
         
@@ -297,83 +297,33 @@ class App(ctk.CTk):
             self.entrada_minutos.configure(state="disabled")
             self.entrada_segundos.configure(state="disabled")
 
-            def callback_com_alarme(tempo):
+            def callback(tempo):
                 utils.atualizar_interface(tempo, self.label_temporizador)
                 if tempo <= 0:
-                    self.tocar_alarme_temporizador()
+                    self.label_temporizador.configure(text_color="red")
 
-            self.temporizador.definir_tempo(tempo_total_ms)
+            if getattr(self.temporizador, "total_ms", 0) == 0 and getattr(self.temporizador, "tempo_restante", 0) == 0:
+                self.temporizador.definir_tempo(tempo_total_ms)
+
             self.temporizador.iniciar_temporizador(
                 hora=horas,
                 minuto=minutos,
                 segundo=segundos,
-                callback=callback_com_alarme
+                callback=callback
             )
+
         except ValueError:
             utils.mostrar_mensagem("Erro", "Por favor, insira apenas números.", "error")
             self.resetar_temporizador()
 
-    def tocar_alarme_temporizador(self):
-        caminho_audio = os.path.join(self.BASE_DIR, "..", "media", "aud", "Basic Alarm.mp3")
-        try:
-            if os.path.exists(caminho_audio):
-                self.alarme_tocando = True  # Adiciona esta linha para controlar o estado
-                pygame.mixer.music.load(caminho_audio)
-                pygame.mixer.music.play(-1)
-                
-                # Abre a janela para parar o alarme
-                self.abrir_janela_parar_alarme_temporizador()
-            else:
-                utils.mostrar_mensagem("Erro", "Arquivo de alarme não encontrado.", "error")
-        except Exception as e:
-            utils.mostrar_mensagem("Erro", f"Não foi possível reproduzir o alarme: {str(e)}", "error")
-
-    def abrir_janela_parar_alarme_temporizador(self):
-        if hasattr(self, 'janela_parar_alarme_temporizador') and self.janela_parar_alarme_temporizador.winfo_exists():
-            self.janela_parar_alarme_temporizador.lift()
-            return
-
-        self.janela_parar_alarme_temporizador = ctk.CTkToplevel(self)
-        self.janela_parar_alarme_temporizador.geometry("350x200")
-        self.janela_parar_alarme_temporizador.title("⏰ Alarme do Temporizador!")
-        self.janela_parar_alarme_temporizador.resizable(True, True)
-
-        frame = ctk.CTkFrame(self.janela_parar_alarme_temporizador)
-        frame.pack(pady=30, padx=20, fill="both", expand=True)
-
-        utils.abrir_janela_em_foco(self.janela_parar_alarme_temporizador, master=self)
-
-        ctk.CTkLabel(
-            frame,
-            text="⏰ Temporizador Concluído!",
-            font=("Arial", 24)
-        ).pack(pady=10)
-
-        btn_frame = ctk.CTkFrame(frame, fg_color="transparent")
-        btn_frame.pack()
-
-        ctk.CTkButton(
-            btn_frame,
-            text="Parar",
-            command=lambda: [self.janela_parar_alarme_temporizador.destroy(), self.parar_alarme_temporizador()],
-            width=100,
-            fg_color="#d9534f",
-            hover_color="#c9302c"
-        ).pack(pady=20)
-
-    def parar_alarme_temporizador(self):
-        if self.alarme_tocando:
-            pygame.mixer.music.stop()
-            self.alarme_tocando = False
-        self.resetar_temporizador()
-
     def parar_temporizador(self):
-        self.temporizador.parar_temporizador()
-        
-    def resetar_temporizador(self):
-        self.temporizador.resetar_temporizador()
-        self.label_temporizador.configure(text="00:00:00:000")
+        self.temporizador.para_temporizador()
 
+    def resetar_temporizador(self):
+        self.temporizador.para_temporizador()
+        self.temporizador.reseta_temporizador()
+        
+        self.label_temporizador.configure(text="00:00:00:000", text_color="white")
         self.entrada_horas.configure(state="normal")
         self.entrada_minutos.configure(state="normal")
         self.entrada_segundos.configure(state="normal")
@@ -706,13 +656,6 @@ class App(ctk.CTk):
             hover_color="#c9302c"
         ).pack(side="left", padx=20)
 
-        ctk.CTkButton(
-            btn_frame,
-            text="Soneca (5 min)",
-            command=lambda: [self.janela_tocandoDespertador.destroy(), self.soneca_alarme(5)],
-            width=100
-        ).pack(side="right", padx=20)
-
         caminho_audio = os.path.join(self.BASE_DIR, "..", "media", "aud", nome_audio)
         try:
             if os.path.exists(caminho_audio):
@@ -721,11 +664,6 @@ class App(ctk.CTk):
                 pygame.mixer.music.play(-1) 
         except Exception as e:
             utils.mostrar_mensagem("Erro", f"Não foi possível reproduzir o áudio: {str(e)}", "error")
-
-    def soneca_alarme(self, minutos):
-        agora = datetime.datetime.now()
-        self.despertador.soneca_alarme(agora.hour, agora.minute, minutos)
-
 
     def parar_alarme(self):
         agora = datetime.datetime.now()
