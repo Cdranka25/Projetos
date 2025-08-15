@@ -1,6 +1,11 @@
 # src/utils.py
 from pathlib import Path
 from tkinter import messagebox
+<<<<<<< HEAD
+=======
+from PIL import Image
+import customtkinter as ctk # type: ignore
+>>>>>>> 0023f805d26db8d4b1b5affd704bd70c3a46ccac
 import os
 from PIL import Image, ImageTk
 import customtkinter as ctk #type ignore
