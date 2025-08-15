@@ -1,20 +1,23 @@
+# src/utils.py
+from pathlib import Path
 from tkinter import messagebox
-from PIL import Image
-import customtkinter as ctk 
 import os
-# pip install pillow
-# pip install customtkinter
+from PIL import Image, ImageTk
+import customtkinter as ctk #type ignore
+import tkinter as tk
+import logging
+from config import AUDIO_DIR
+
+logger = logging.getLogger(__name__)
 
 def formatar_tempo(ms):
     if ms < 0:
         raise ValueError("Tempo não pode ser negativo")
-    
     ms = int(ms)
     horas = ms // 3600000
     minutos = (ms % 3600000) // 60000
     segundos = (ms % 60000) // 1000
     milissegundos = ms % 1000
-    
     return f"{horas:02}:{minutos:02}:{segundos:02}:{milissegundos:03}"
 
 def abrir_janela_em_foco(janela, master=None):
@@ -22,20 +25,17 @@ def abrir_janela_em_foco(janela, master=None):
     janela.focus_force()
     janela.attributes("-topmost", True)
     janela.after(100, lambda: janela.attributes("-topmost", False))
-
-    janela.update_idletasks()  
+    janela.update_idletasks()
     largura = janela.winfo_width()
     altura = janela.winfo_height()
-
-    if master:        
+    if master:
         x = master.winfo_rootx() + (master.winfo_width() // 2) - (largura // 2)
         y = master.winfo_rooty() + (master.winfo_height() // 2) - (altura // 2)
-    else:        
+    else:
         largura_tela = janela.winfo_screenwidth()
         altura_tela = janela.winfo_screenheight()
         x = (largura_tela // 2) - (largura // 2)
         y = (altura_tela // 2) - (altura // 2)
-
     janela.geometry(f"+{x}+{y}")
 
 def atualizar_interface(tempo_ms, label):
@@ -50,23 +50,52 @@ def mostrar_mensagem(titulo, mensagem, tipo):
     else:
         messagebox.showinfo(titulo, mensagem)
 
-def carregar_icone(janela, caminho_icone):
+def carregar_icone(janela, caminho_icone: Path | str):
     try:
-        
-        if not os.path.exists(caminho_icone):
-            print(f"Arquivo de ícone não encontrado: {caminho_icone}")
+        caminho = Path(caminho_icone)
+        if not caminho.exists():
+            print(f"Arquivo de ícone não encontrado: {caminho}")
             return False
 
-        
-        if os.name == 'nt':  
-            janela.iconbitmap(caminho_icone)
-        else:  
-            from PIL import ImageTk
-            img = Image.open(caminho_icone)
+        if os.name == 'nt':
+            try:
+                janela.iconbitmap(str(caminho))
+            except Exception:
+
+                img = Image.open(caminho)
+                photo = ImageTk.PhotoImage(img)
+                janela.wm_iconphoto(True, photo)
+
+                if not hasattr(janela, "_icon_ref"):
+                    janela._icon_ref = photo
+        else:
+            img = Image.open(caminho)
             photo = ImageTk.PhotoImage(img)
             janela.wm_iconphoto(True, photo)
-        
+            if not hasattr(janela, "_icon_ref"):
+                janela._icon_ref = photo
         return True
     except Exception as e:
         print(f"Erro ao carregar ícone: {e}")
         return False
+
+_imagem_cache = {}
+
+def carregar_imagem(nome_arquivo: str, tamanho: tuple[int, int] = None, modo: str = "ctk"):
+    caminho_img = IMG_DIR / nome_arquivo
+    if not caminho_img.exists():
+        logger.error(f"Arquivo de imagem não encontrado: {caminho_img}")
+        return None
+    try:
+        img = Image.open(caminho_img)
+        if tamanho:
+            img = img.resize(tamanho, Image.LANCZOS)
+        if modo == "ctk":
+            imagem = ctk.CTkImage(light_image=img, dark_image=img)
+        else:
+            imagem = tk.PhotoImage(file=str(caminho_img))
+        _imagem_cache[nome_arquivo] = imagem
+        return imagem
+    except Exception as e:
+        logger.exception(f"Erro ao carregar imagem {nome_arquivo}: {e}")
+        return None

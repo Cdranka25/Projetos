@@ -1,3 +1,6 @@
 {
-    "CodeGPT.apiKey": "OpenAI"
+    "CodeGPT.apiKey": "OpenAI",
+    "python.analysis.extraPaths": [
+        "./Projetos Back End/Python/Relogio Inteligente/src/model"
+    ]
 }
