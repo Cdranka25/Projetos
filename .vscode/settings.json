@@ -1,6 +1,9 @@
 {
     "CodeGPT.apiKey": "OpenAI",
     "python.analysis.extraPaths": [
-        "./Projetos Back End/Python/Relogio Inteligente/src/model"
-    ]
+        "./Projetos Back End/Python/Relogio Inteligente/src/model",
+        "./Projetos Back End/Python/Relogio Inteligente/src"
+    ],
+    "python-envs.defaultEnvManager": "ms-python.python:system",
+    "python-envs.pythonProjects": []
 }
