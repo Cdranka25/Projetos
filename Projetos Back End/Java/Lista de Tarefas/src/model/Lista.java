@@ -4,9 +4,6 @@
  */
 package model;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  *
  * @author user
@@ -58,10 +55,7 @@ public class Lista {
     }
 
     public String toString() {
-        // Converte o status "concluído" para "Sim" ou "Não"
         String tarefaConcluida = concluido ? "true" : "false";
-
-        // Retorna os atributos separados por vírgulas
         return getTarefa() + ";" + getPrioridade() + ";" + getCategoria() + ";" + tarefaConcluida;
     }
 

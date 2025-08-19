@@ -13,7 +13,7 @@ import model.Utilitario;
  */
 public class App_ExcluirLinha extends javax.swing.JFrame {
 
-    private App app; // Referência à tela principal
+    private App app; 
 
     /**
      * Creates new form App_ExcluirLinha
