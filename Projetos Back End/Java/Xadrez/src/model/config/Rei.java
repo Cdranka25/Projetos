@@ -12,19 +12,17 @@ public class Rei extends Piece {
 
     @Override
     public boolean isValidMove(Position newPosition, Piece[][] tabuleiro) {
-
         int diferencaDeLinha = Math.abs(position.getLinha() - newPosition.getLinha());
         int diferencaDeColuna = Math.abs(position.getColuna() - newPosition.getColuna());
 
-        // O Rei pode se mover apenas uma casa em qualquer direção
-        boolean movimentoValido = diferencaDeLinha <= 1 && diferencaDeColuna <= 1 && !(diferencaDeLinha == 0 && diferencaDeColuna == 0);    
+        boolean movimentoValido = diferencaDeLinha <= 1 && diferencaDeColuna <= 1
+                && !(diferencaDeLinha == 0 && diferencaDeColuna == 0);
 
-        if(!movimentoValido) {
+        if (!movimentoValido) {
             return false;
         }
+
         Piece pecaDestino = tabuleiro[newPosition.getLinha()][newPosition.getColuna()];
-        return pecaDestino == null || pecaDestino.getColor() != color;
+        return pecaDestino == null || pecaDestino.getColor() != this.getColor();
     }
-
-
 }

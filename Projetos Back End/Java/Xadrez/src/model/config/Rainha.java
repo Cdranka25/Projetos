@@ -12,11 +12,12 @@ public class Rainha extends Piece {
 
     @Override
     public boolean isValidMove(Position newPosition, Piece[][] tabuleiro) {
-        if (newPosition.equals(this)) {
+        if (newPosition.equals(this.position)) {
             return false;
         }
-        int diferencaDeLinha = Math.abs(newPosition.getLinha() - newPosition.getLinha());
-        int diferencaDeColuna = Math.abs(newPosition.getColuna() - newPosition.getColuna());
+
+        int diferencaDeLinha = Math.abs(newPosition.getLinha() - this.position.getLinha());
+        int diferencaDeColuna = Math.abs(newPosition.getColuna() - this.position.getColuna());
 
         boolean linhaReta = this.position.getLinha() == newPosition.getLinha()
                 || this.position.getColuna() == newPosition.getColuna();

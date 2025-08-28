@@ -46,6 +46,11 @@ public class GameXadrezGUI extends JFrame {
 
     public GameXadrezGUI() {
         setTitle("Game de Xadrez");
+        try{
+            setIconImage(new ImageIcon("/media/img/xadrez.png").getImage());
+        } catch(Exception e){
+            System.out.println("Ícone não encontrado.");
+        }
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new GridLayout(8, 8));
         inicializarTabuleiro();
@@ -53,6 +58,7 @@ public class GameXadrezGUI extends JFrame {
         pack();
         setMinimumSize(new Dimension(640, 640));
         setLocationRelativeTo(null);
+        
         setVisible(true);
     }
 
@@ -135,7 +141,7 @@ public class GameXadrezGUI extends JFrame {
         JMenuBar menuBar = new JMenuBar();
         JMenu gameMenu = new JMenu("Game");
         JMenuItem resetItem = new JMenuItem("Reset");
-        resetItem.addActionListener(e -> resetGame());
+        resetItem.addActionListener(_ -> resetGame());
         gameMenu.add(resetItem);
         menuBar.add(gameMenu);
         setJMenuBar(menuBar);
@@ -147,8 +153,8 @@ public class GameXadrezGUI extends JFrame {
     }
 
     private void verificarGameOver(){
-        if(game.esta_em_ChquekMate(game.getJogadorAtualColor())) {
-            int resposta = JOptionPane.showConfirmDialog(this, "Chque Mate! Gostaria de jogar Novamente?", "Game Over", JOptionPane.YES_NO_OPTION);
+        if(game.esta_em_ChequekMate(game.getJogadorAtualColor())) {
+            int resposta = JOptionPane.showConfirmDialog(this, "Cheque Mate! Gostaria de jogar Novamente?", "Game Over", JOptionPane.YES_NO_OPTION);
             if(resposta == JOptionPane.YES_OPTION){
                 resetGame();
             } else {

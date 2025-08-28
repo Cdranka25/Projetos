@@ -60,10 +60,11 @@ public class TabuleiroDeXadrez {
     public void movePiece(Position inicio, Position fim) {
         if (tabuleiro[inicio.getLinha()][inicio.getColuna()] != null
                 && tabuleiro[inicio.getLinha()][inicio.getColuna()].isValidMove(fim, tabuleiro)) {
-            tabuleiro[fim.getLinha()][fim.getColuna()] = tabuleiro[inicio.getLinha()][inicio.getColuna()];
 
+            tabuleiro[fim.getLinha()][fim.getColuna()] = tabuleiro[inicio.getLinha()][inicio.getColuna()];
             tabuleiro[fim.getLinha()][fim.getColuna()].setPosition(fim);
             tabuleiro[inicio.getLinha()][inicio.getColuna()] = null;
+
         }
     }
 

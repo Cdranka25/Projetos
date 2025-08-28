@@ -11,7 +11,26 @@ public class GameXadrez {
     private boolean turnoPecasBrancas = true;
 
     public GameXadrez() {
-        tabuleiro = new TabuleiroDeXadrez();
+        this.tabuleiro = new TabuleiroDeXadrez();
+    }
+
+    public TabuleiroDeXadrez getTabuleiro() {
+        return this.tabuleiro;
+    }
+
+    public void resetGame() {
+        this.tabuleiro = new TabuleiroDeXadrez();
+        this.turnoPecasBrancas = true;
+    }
+
+    public PieceColor getJogadorAtualColor() {
+        return turnoPecasBrancas ? PieceColor.BRANCO : PieceColor.PRETO;
+    }
+
+    private Position selecionarPosicao;
+
+    public boolean pecaEstaSelecionada() {
+        return selecionarPosicao != null;
     }
 
     public boolean fazerMovimento(Position inicio, Position fim) {
@@ -42,7 +61,7 @@ public class GameXadrez {
 
     public boolean esta_Em_Cheque(PieceColor corRei) {
         Position posicaoRei = encontrarRei(corRei);
-        for (int linha = 0; linha < tabuleiro.getTabuleiro()[linha].length; linha++) {
+        for (int linha = 0; linha < tabuleiro.getTabuleiro().length; linha++) {
             for (int coluna = 0; coluna < tabuleiro.getTabuleiro()[linha].length; coluna++) {
                 Piece peca = tabuleiro.getPeca(linha, coluna);
                 if (peca != null && peca.getColor() != corRei) {
@@ -55,7 +74,7 @@ public class GameXadrez {
         return false;
     }
 
-    public boolean esta_em_ChquekMate(PieceColor corRei) {
+    public boolean esta_em_ChequekMate(PieceColor corRei) {
         if (!esta_Em_Cheque(corRei)) {
             return false;
         }
@@ -97,25 +116,6 @@ public class GameXadrez {
 
         return emCheque;
 
-    }
-
-    public TabuleiroDeXadrez getTabuleiro() {
-        return this.tabuleiro;
-    }
-
-    public void resetGame() {
-        this.tabuleiro = new TabuleiroDeXadrez();
-        this.turnoPecasBrancas = true;
-    }
-
-    public PieceColor getJogadorAtualColor() {
-        return turnoPecasBrancas ? PieceColor.BRANCO : PieceColor.PRETO;
-    }
-
-    private Position selecionarPosicao;
-
-    public boolean pecaEstaSelecionada() {
-        return selecionarPosicao != null;
     }
 
     public boolean tratarSelecaoDeQuadrado(int linha, int coluna) {
