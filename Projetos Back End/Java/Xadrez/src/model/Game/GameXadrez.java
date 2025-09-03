@@ -7,6 +7,8 @@ import model.config.*;
 import model.controller.*;
 
 public class GameXadrez {
+    private static final int N = 8;
+
     private TabuleiroDeXadrez tabuleiro;
     private boolean turnoPecasBrancas = true;
 
@@ -33,12 +35,15 @@ public class GameXadrez {
         return selecionarPosicao != null;
     }
 
+    // ==================== MOVIMENTAÇÃO ====================
+
     public boolean fazerMovimento(Position inicio, Position fim) {
         Piece movendoPeca = tabuleiro.getPeca(inicio.getLinha(), inicio.getColuna());
         if (movendoPeca == null
                 || movendoPeca.getColor() != (turnoPecasBrancas ? PieceColor.BRANCO : PieceColor.PRETO)) {
             return false;
         }
+
         if (movendoPeca.isValidMove(fim, tabuleiro.getTabuleiro())) {
             tabuleiro.movePiece(inicio, fim);
             turnoPecasBrancas = !turnoPecasBrancas;
@@ -47,76 +52,52 @@ public class GameXadrez {
         return false;
     }
 
-    private Position encontrarRei(PieceColor color) {
-        for (int linha = 0; linha < tabuleiro.getTabuleiro().length; linha++) {
-            for (int coluna = 0; coluna < tabuleiro.getTabuleiro()[linha].length; coluna++) {
+    // ==================== REI / CHEQUE / CHEQUE-MATE ====================
+
+    private Position encontrarReiOuNull(PieceColor color) {
+        for (int linha = 0; linha < N; linha++) {
+            for (int coluna = 0; coluna < N; coluna++) {
                 Piece peca = tabuleiro.getPeca(linha, coluna);
                 if (peca instanceof Rei && peca.getColor() == color) {
                     return new Position(linha, coluna);
                 }
             }
         }
-        throw new RuntimeException("Rei não encontrado");
+        return null;
     }
 
     public boolean esta_Em_Cheque(PieceColor corRei) {
-        Position posicaoRei = encontrarRei(corRei);
-        for (int linha = 0; linha < tabuleiro.getTabuleiro().length; linha++) {
-            for (int coluna = 0; coluna < tabuleiro.getTabuleiro()[linha].length; coluna++) {
-                Piece peca = tabuleiro.getPeca(linha, coluna);
-                if (peca != null && peca.getColor() != corRei) {
-                    if (peca.isValidMove(posicaoRei, tabuleiro.getTabuleiro())) {
-                        return true;
-                    }
-                }
-            }
+        Position posicaoRei = encontrarReiOuNull(corRei);
+        if (posicaoRei == null) {
+            return true;
         }
-        return false;
+        PieceColor atacante = (corRei == PieceColor.BRANCO) ? PieceColor.PRETO : PieceColor.BRANCO;
+        return casaEstaAtacadaPor(posicaoRei, atacante);
     }
 
     public boolean esta_em_ChequekMate(PieceColor corRei) {
-        if (!esta_Em_Cheque(corRei)) {
-            return false;
-        }
-        Position posicaoRei = encontrarRei(corRei);
-        Rei rei = (Rei) tabuleiro.getPeca(posicaoRei.getLinha(), posicaoRei.getColuna());
+        Position posicaoRei = encontrarReiOuNull(corRei);
+        if (posicaoRei == null) return true;
 
-        for (int deslocamentoDeLinha = -1; deslocamentoDeLinha <= 1; deslocamentoDeLinha++) {
-            for (int deslocamentoDeColuna = -1; deslocamentoDeColuna <= 1; deslocamentoDeColuna++) {
-                if (deslocamentoDeLinha == 0 && deslocamentoDeColuna == 0) {
-                    continue;
-                }
-                Position newPosition = new Position(posicaoRei.getLinha() + deslocamentoDeLinha,
-                        posicaoRei.getColuna() + deslocamentoDeColuna);
-                if (posicaoDentroDoTabuleiro(newPosition) && rei.isValidMove(newPosition, tabuleiro.getTabuleiro())
-                        && !estaEmCheque_AposMovimento(corRei, posicaoRei, newPosition)) {
+        if (!esta_Em_Cheque(corRei)) return false;
 
-                    return false;
+        for (int linha = 0; linha < N; linha++) {
+            for (int coluna = 0; coluna < N; coluna++) {
+                Piece p = tabuleiro.getPeca(linha, coluna);
+                if (p != null && p.getColor() == corRei) {
+                    Position origem = new Position(linha, coluna);
+                    for (Position destino : getPseudoMovimentosParaPeca(origem)) {
+                       
+                        boolean salva = simularMovimentoMantendoEstado(origem, destino, () -> !esta_Em_Cheque(corRei));
+                        if (salva) return false;
+                    }
                 }
             }
         }
         return true;
     }
 
-    private boolean posicaoDentroDoTabuleiro(Position position) {
-        return position.getLinha() >= 0 && position.getLinha() < tabuleiro.getTabuleiro().length
-                && position.getColuna() >= 0 && position.getColuna() < tabuleiro.getTabuleiro()[0].length;
-    }
-
-    private boolean estaEmCheque_AposMovimento(PieceColor corRei, Position inicio, Position fim) {
-        Piece aux = tabuleiro.getPeca(fim.getLinha(), fim.getColuna());
-
-        tabuleiro.setPeca(fim.getLinha(), fim.getColuna(), tabuleiro.getPeca(inicio.getLinha(), inicio.getColuna()));
-        tabuleiro.setPeca(inicio.getLinha(), inicio.getColuna(), null);
-
-        boolean emCheque = esta_Em_Cheque(corRei);
-
-        tabuleiro.setPeca(inicio.getLinha(), inicio.getColuna(), tabuleiro.getPeca(fim.getLinha(), fim.getColuna()));
-        tabuleiro.setPeca(fim.getLinha(), fim.getColuna(), aux);
-
-        return emCheque;
-
-    }
+    // ==================== SELEÇÃO NA GUI ====================
 
     public boolean tratarSelecaoDeQuadrado(int linha, int coluna) {
         if (selecionarPosicao == null) {
@@ -134,99 +115,218 @@ public class GameXadrez {
         return false;
     }
 
-    public List<Position> getMovimentosPossiveisParaPeca(Position position) {
-        Piece pecaSelecionada = tabuleiro.getPeca(position.getLinha(), position.getColuna());
+    // ==================== MOVIMENTOS: LEGAIS (filtrados) ====================
 
-        if (pecaSelecionada == null) {
-            return new ArrayList<>();
+    public List<Position> getMovimentosPossiveisParaPeca(Position position) {
+        Piece p = tabuleiro.getPeca(position.getLinha(), position.getColuna());
+        if (p == null) return new ArrayList<>();
+
+        List<Position> candidatos = getPseudoMovimentosParaPeca(position);
+
+        List<Position> legais = new ArrayList<>();
+        for (Position destino : candidatos) {
+            if (simularMovimentoMantendoEstado(position, destino, () -> !esta_Em_Cheque(p.getColor()))) {
+                legais.add(destino);
+            }
         }
-        List<Position> movimentosPossiveis = new ArrayList<>();
-        switch (pecaSelecionada.getClass().getSimpleName()) {
+        return legais;
+    }
+
+    // ==================== PSEUDO MOVIMENTOS (sem considerar cheque) ====================
+
+    public List<Position> getPseudoMovimentosParaPeca(Position position) {
+        Piece p = tabuleiro.getPeca(position.getLinha(), position.getColuna());
+        List<Position> movimentos = new ArrayList<>();
+        if (p == null) return movimentos;
+
+        String nome = p.getClass().getSimpleName(); 
+        switch (nome) {
             case "Peao":
-                addPeaoMovimentos(position, pecaSelecionada.getColor(), movimentosPossiveis);
+                addPeaoMovimentos(position, p.getColor(), movimentos);
                 break;
             case "Torre":
-                addMovimetosDeLinha(position, new int[][] { { 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 } },
-                        movimentosPossiveis);
+                addMovimetosDeLinha(position, new int[][]{{1,0},{-1,0},{0,1},{0,-1}}, movimentos);
                 break;
             case "Cavalo":
-                addMovimentosUnicos(position, new int[][] { { 2, 1 }, { 2, -1 }, { -2, 1 }, { -2, -1 }, { 1, 2 },
-                        { -1, 2 }, { 1, -2 }, { -1, -2 } }, movimentosPossiveis);
+                addMovimentosUnicos(position, new int[][]{{2,1},{2,-1},{-2,1},{-2,-1},{1,2},{-1,2},{1,-2},{-1,-2}}, movimentos);
                 break;
             case "Bispo":
-                addMovimetosDeLinha(position, new int[][] { { 1, 1 }, { -1, -1 }, { 1, -1 }, { -1, 1 } },
-                        movimentosPossiveis);
+                addMovimetosDeLinha(position, new int[][]{{1,1},{-1,-1},{1,-1},{-1,1}}, movimentos);
                 break;
             case "Rainha":
-                addMovimetosDeLinha(position, new int[][] { { 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 }, { 1, 1 },
-                        { -1, -1 }, { 1, -1 }, { -1, 1 } }, movimentosPossiveis);
+                addMovimetosDeLinha(position, new int[][]{{1,0},{-1,0},{0,1},{0,-1},{1,1},{-1,-1},{1,-1},{-1,1}}, movimentos);
                 break;
             case "Rei":
-                addMovimentosUnicos(position,
-                        new int[][] { { 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 }, { 1, 1 }, { -1, -1 },
-                                { 1, -1 }, { -1, 1 } },
-                        movimentosPossiveis);
+                addMovimentosUnicos(position, new int[][]{{1,0},{-1,0},{0,1},{0,-1},{1,1},{-1,-1},{1,-1},{-1,1}}, movimentos);
                 break;
         }
-        return movimentosPossiveis;
+        return movimentos;
     }
 
-    private void addMovimetosDeLinha(Position position, int[][] directions, List<Position> movimentosPossiveis) {
+    private void addMovimetosDeLinha(Position position, int[][] directions, List<Position> movimentos) {
+        Piece origem = tabuleiro.getPeca(position.getLinha(), position.getColuna());
         for (int[] d : directions) {
-            Position newPosition = new Position(position.getLinha() + d[0], position.getColuna() + d[1]);
-            while (posicaoDentroDoTabuleiro(newPosition)) {
-                if (tabuleiro.getPeca(newPosition.getLinha(), newPosition.getColuna()) == null) {
-                    movimentosPossiveis.add(new Position(newPosition.getLinha(), newPosition.getColuna()));
-                    newPosition = new Position(newPosition.getLinha() + d[0], newPosition.getColuna() + d[1]);
+            int r = position.getLinha() + d[0];
+            int c = position.getColuna() + d[1];
+            while (posicaoDentroDoTabuleiro(r, c)) {
+                Piece alvo = tabuleiro.getPeca(r, c);
+                if (alvo == null) {
+                    movimentos.add(new Position(r, c));
                 } else {
-                    if (tabuleiro.getPeca(newPosition.getLinha(), newPosition.getColuna()).getColor() != tabuleiro
-                            .getPeca(position.getLinha(), position.getColuna()).getColor()) {
-                        movimentosPossiveis.add(newPosition);
+                    if (alvo.getColor() != origem.getColor()) {
+                        movimentos.add(new Position(r, c)); 
                     }
-                    break;
+                    break; 
                 }
+                r += d[0];
+                c += d[1];
             }
         }
     }
 
-    private void addMovimentosUnicos(Position position, int[][] moves, List<Position> movimentosPossiveis) {
-        for (int[] movimento : moves) {
-            Position newPosition = new Position(position.getLinha() + movimento[0],
-                    position.getColuna() + movimento[1]);
-            if (posicaoDentroDoTabuleiro(newPosition)
-                    && (tabuleiro.getPeca(newPosition.getLinha(), newPosition.getColuna()) == null || tabuleiro
-                            .getPeca(newPosition.getLinha(), newPosition.getColuna())
-                            .getColor() != tabuleiro.getPeca(position.getLinha(), position.getColuna()).getColor())) {
-                movimentosPossiveis.add(newPosition);
-
+    private void addMovimentosUnicos(Position position, int[][] moves, List<Position> movimentos) {
+        Piece origem = tabuleiro.getPeca(position.getLinha(), position.getColuna());
+        for (int[] m : moves) {
+            int r = position.getLinha() + m[0];
+            int c = position.getColuna() + m[1];
+            if (!posicaoDentroDoTabuleiro(r, c)) continue;
+            Piece alvo = tabuleiro.getPeca(r, c);
+            if (alvo == null || alvo.getColor() != origem.getColor()) {
+                movimentos.add(new Position(r, c));
             }
         }
     }
 
-    private void addPeaoMovimentos(Position position, PieceColor color, List<Position> movimentosPossiveis) {
-        int direcao = color == PieceColor.BRANCO ? -1 : 1;
-        Position newPos = new Position(position.getLinha() + direcao, position.getColuna());
-        if (posicaoDentroDoTabuleiro(newPos) && tabuleiro.getPeca(newPos.getLinha(), newPos.getColuna()) == null) {
-            movimentosPossiveis.add(newPos);
-        }
-        if ((color == PieceColor.BRANCO && position.getLinha() == 6)
-                || (color == PieceColor.PRETO && position.getLinha() == 1)) {
-            newPos = new Position(position.getLinha() + 2 * direcao, position.getColuna());
-            Position intermediarioPos = new Position(position.getLinha() + direcao, position.getColuna());
+    private void addPeaoMovimentos(Position position, PieceColor color, List<Position> movimentos) {
+        int dir = (color == PieceColor.BRANCO) ? -1 : 1;
+        int r = position.getLinha();
+        int c = position.getColuna();
 
-            if (posicaoDentroDoTabuleiro(newPos) && tabuleiro.getPeca(newPos.getLinha(), newPos.getColuna()) == null
-                    && tabuleiro.getPeca(intermediarioPos.getLinha(), intermediarioPos.getColuna()) == null) {
-                movimentosPossiveis.add(newPos);
+        int r1 = r + dir;
+        if (posicaoDentroDoTabuleiro(r1, c) && tabuleiro.getPeca(r1, c) == null) {
+            movimentos.add(new Position(r1, c));
+
+            int startRow = (color == PieceColor.BRANCO) ? 6 : 1;
+            int r2 = r + 2 * dir;
+            if (r == startRow && posicaoDentroDoTabuleiro(r2, c)
+                    && tabuleiro.getPeca(r2, c) == null) {
+                movimentos.add(new Position(r2, c));
             }
         }
 
-        int[] capture = { position.getColuna() - 1, position.getColuna() + 1 };
-        for (int col : capture) {
-            newPos = new Position(position.getLinha() + direcao, col);
-            if (posicaoDentroDoTabuleiro(newPos) && tabuleiro.getPeca(newPos.getLinha(), newPos.getColuna()) != null
-                    && tabuleiro.getPeca(newPos.getLinha(), newPos.getColuna()).getColor() != color) {
-                movimentosPossiveis.add(newPos);
+        int[] cols = {c - 1, c + 1};
+        for (int nc : cols) {
+            if (!posicaoDentroDoTabuleiro(r1, nc)) continue;
+            Piece alvo = tabuleiro.getPeca(r1, nc);
+            if (alvo != null && alvo.getColor() != color) {
+                movimentos.add(new Position(r1, nc));
             }
         }
+    }
+
+    // ==================== ATAQUES (para cheque) ====================
+
+    private boolean casaEstaAtacadaPor(Position casa, PieceColor atacante) {
+        for (int r = 0; r < N; r++) {
+            for (int c = 0; c < N; c++) {
+                Piece p = tabuleiro.getPeca(r, c);
+                if (p == null || p.getColor() != atacante) continue;
+                if (pecaAtacaCasa(new Position(r, c), casa, p)) return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean pecaAtacaCasa(Position origem, Position alvo, Piece peca) {
+        String nome = peca.getClass().getSimpleName();
+
+        switch (nome) {
+            case "Peao": {
+                int dir = (peca.getColor() == PieceColor.BRANCO) ? -1 : 1;
+                int r = origem.getLinha() + dir;
+                int c1 = origem.getColuna() - 1;
+                int c2 = origem.getColuna() + 1;
+                if (posicaoDentroDoTabuleiro(r, c1) && alvo.getLinha() == r && alvo.getColuna() == c1) return true;
+                if (posicaoDentroDoTabuleiro(r, c2) && alvo.getLinha() == r && alvo.getColuna() == c2) return true;
+                return false;
+            }
+            case "Cavalo": {
+                int[][] m = {{2,1},{2,-1},{-2,1},{-2,-1},{1,2},{-1,2},{1,-2},{-1,-2}};
+                for (int[] d : m) {
+                    int r = origem.getLinha() + d[0], c = origem.getColuna() + d[1];
+                    if (posicaoDentroDoTabuleiro(r, c) && r == alvo.getLinha() && c == alvo.getColuna()) return true;
+                }
+                return false;
+            }
+            case "Rei": {
+                int[][] m = {{1,0},{-1,0},{0,1},{0,-1},{1,1},{-1,-1},{1,-1},{-1,1}};
+                for (int[] d : m) {
+                    int r = origem.getLinha() + d[0], c = origem.getColuna() + d[1];
+                    if (posicaoDentroDoTabuleiro(r, c) && r == alvo.getLinha() && c == alvo.getColuna()) return true;
+                }
+                return false;
+            }
+            case "Torre":
+                return linhaAtacaCasa(origem, alvo, new int[][]{{1,0},{-1,0},{0,1},{0,-1}});
+            case "Bispo":
+                return linhaAtacaCasa(origem, alvo, new int[][]{{1,1},{-1,-1},{1,-1},{-1,1}});
+            case "Rainha":
+                return linhaAtacaCasa(origem, alvo, new int[][]{{1,0},{-1,0},{0,1},{0,-1},{1,1},{-1,-1},{1,-1},{-1,1}});
+        }
+        return false;
+    }
+
+    private boolean linhaAtacaCasa(Position origem, Position alvo, int[][] dirs) {
+        for (int[] d : dirs) {
+            int r = origem.getLinha() + d[0];
+            int c = origem.getColuna() + d[1];
+            while (posicaoDentroDoTabuleiro(r, c)) {
+                Piece p = tabuleiro.getPeca(r, c);
+                if (r == alvo.getLinha() && c == alvo.getColuna()) return true;
+                if (p != null) break;
+                r += d[0];
+                c += d[1];
+            }
+        }
+        return false;
+    }
+
+    // ==================== UTIL / SIMULAÇÃO ====================
+
+    private boolean posicaoDentroDoTabuleiro(Position pos) {
+        return posicaoDentroDoTabuleiro(pos.getLinha(), pos.getColuna());
+    }
+
+    private boolean posicaoDentroDoTabuleiro(int r, int c) {
+        return r >= 0 && r < N && c >= 0 && c < N;
+    }
+
+    private boolean simularMovimentoMantendoEstado(Position origemPos, Position destinoPos, Verificador verificador) {
+        Piece origem = tabuleiro.getPeca(origemPos.getLinha(), origemPos.getColuna());
+        Piece destino = tabuleiro.getPeca(destinoPos.getLinha(), destinoPos.getColuna());
+
+        Position origemPosObj = (origem != null) ? origem.getPosition() : null;
+        Position destinoPosObj = (destino != null) ? destino.getPosition() : null;
+
+        tabuleiro.setPeca(destinoPos.getLinha(), destinoPos.getColuna(), origem);
+        tabuleiro.setPeca(origemPos.getLinha(), origemPos.getColuna(), null);
+        if (origem != null) origem.setPosition(new Position(destinoPos.getLinha(), destinoPos.getColuna()));
+
+        boolean resultado;
+        try {
+            resultado = verificador.testar();
+        } finally {
+            tabuleiro.setPeca(origemPos.getLinha(), origemPos.getColuna(), origem);
+            tabuleiro.setPeca(destinoPos.getLinha(), destinoPos.getColuna(), destino);
+            if (origem != null) origem.setPosition(origemPosObj);
+            if (destino != null) destino.setPosition(destinoPosObj);
+        }
+        return resultado;
+    }
+    
+
+    @FunctionalInterface
+    private interface Verificador {
+        boolean testar();
     }
 }

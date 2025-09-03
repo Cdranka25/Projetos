@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package view;
 
 import javax.swing.*;
@@ -21,13 +17,14 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
 
-/**
- *
- * @author cdran
- */
 public class GameXadrezGUI extends JFrame {
     private final CasaDoTabuleiro[][] casas = new CasaDoTabuleiro[8][8];
     private final GameXadrez game = new GameXadrez();
+
+    private Position guiOriginForAnimation = null;
+    private String guiSymbolForAnimation = null;
+    private Color guiColorForAnimation = null;
+    private boolean animating = false;
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(GameXadrezGUI::new);
@@ -46,9 +43,11 @@ public class GameXadrezGUI extends JFrame {
 
     public GameXadrezGUI() {
         setTitle("Game de Xadrez");
-        try{
-            setIconImage(new ImageIcon("/media/img/xadrez.png").getImage());
-        } catch(Exception e){
+        try {
+            java.util.List<Image> icons = new java.util.ArrayList<>();
+            icons.add(new ImageIcon("src/resources/media/img/xadrez.png").getImage());
+            setIconImages(icons);
+        } catch (Exception e) {
             System.out.println("Ícone não encontrado.");
         }
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -58,7 +57,6 @@ public class GameXadrezGUI extends JFrame {
         pack();
         setMinimumSize(new Dimension(640, 640));
         setLocationRelativeTo(null);
-        
         setVisible(true);
     }
 
@@ -99,10 +97,45 @@ public class GameXadrezGUI extends JFrame {
     }
 
     private void tratarCliqueNaCasa(int linha, int Coluna) {
+
+        if (!animating && !game.pecaEstaSelecionada()) {
+            String txt = casas[linha][Coluna].getText();
+            if (txt != null && !txt.isEmpty()) {
+                guiOriginForAnimation = new Position(linha, Coluna);
+                guiSymbolForAnimation = txt;
+                guiColorForAnimation = casas[linha][Coluna].getForeground();
+            } else {
+                guiOriginForAnimation = null;
+                guiSymbolForAnimation = null;
+                guiColorForAnimation = null;
+            }
+        }
+
         boolean moverResultado = game.tratarSelecaoDeQuadrado(linha, Coluna);
         removerDestaque();
 
         if (moverResultado) {
+            if (!animating && guiOriginForAnimation != null && guiSymbolForAnimation != null) {
+                Position origem = guiOriginForAnimation;
+                Position destino = new Position(linha, Coluna);
+
+                String symbolToAnimate = guiSymbolForAnimation;
+                Color colorToAnimate = guiColorForAnimation;
+
+                guiOriginForAnimation = null;
+                guiSymbolForAnimation = null;
+                guiColorForAnimation = null;
+
+                casas[origem.getLinha()][origem.getColuna()].clearPieceSymbol();
+
+                animatePiece(origem, destino, symbolToAnimate, colorToAnimate, () -> {
+                    atualizarTabuleiro();
+                    verificarEstadoDeJogo();
+                    verificarGameOver();
+                });
+
+                return;
+            }
             atualizarTabuleiro();
             verificarEstadoDeJogo();
             verificarGameOver();
@@ -115,16 +148,42 @@ public class GameXadrezGUI extends JFrame {
     private void verificarEstadoDeJogo() {
         PieceColor JogadorAtual = game.getJogadorAtualColor();
         boolean emCheque = game.esta_Em_Cheque(JogadorAtual);
+        boolean emChequeMate = game.esta_em_ChequekMate(JogadorAtual);
 
-        if (emCheque) {
-            JOptionPane.showMessageDialog(this, JogadorAtual + " Está em cheque!");
+        if (emCheque && !emChequeMate) {
+            JOptionPane.showMessageDialog(this, JogadorAtual + " está em cheque!");
         }
     }
 
     private void destacarMovimentosPossiveis(Position position) {
-        List<Position> movimentosPossiveis = game.getMovimentosPossiveisParaPeca(position);
-        for (Position move : movimentosPossiveis) {
-            casas[move.getLinha()][move.getColuna()].setBackground(Color.GREEN);
+
+        List<Position> pseudo = game.getPseudoMovimentosParaPeca(position);
+        List<Position> legais = game.getMovimentosPossiveisParaPeca(position);
+
+        TabuleiroDeXadrez tabuleiro = game.getTabuleiro();
+        Piece pecaSelecionada = tabuleiro.getPeca(position.getLinha(), position.getColuna());
+
+        for (Position move : legais) {
+            Piece alvo = tabuleiro.getPeca(move.getLinha(), move.getColuna());
+
+            if (alvo != null && alvo.getColor() != pecaSelecionada.getColor()) {
+                casas[move.getLinha()][move.getColuna()].setBackground(Color.YELLOW);
+            } else {
+                casas[move.getLinha()][move.getColuna()].setBackground(Color.GREEN);
+            }
+        }
+
+        for (Position move : pseudo) {
+            boolean isLegal = false;
+            for (Position l : legais) {
+                if (l.getLinha() == move.getLinha() && l.getColuna() == move.getColuna()) {
+                    isLegal = true;
+                    break;
+                }
+            }
+            if (!isLegal) {
+                casas[move.getLinha()][move.getColuna()].setBackground(Color.RED);
+            }
         }
     }
 
@@ -152,14 +211,73 @@ public class GameXadrezGUI extends JFrame {
         atualizarTabuleiro();
     }
 
-    private void verificarGameOver(){
-        if(game.esta_em_ChequekMate(game.getJogadorAtualColor())) {
-            int resposta = JOptionPane.showConfirmDialog(this, "Cheque Mate! Gostaria de jogar Novamente?", "Game Over", JOptionPane.YES_NO_OPTION);
-            if(resposta == JOptionPane.YES_OPTION){
+    private void verificarGameOver() {
+        if (game.esta_em_ChequekMate(game.getJogadorAtualColor())) {
+            int resposta = JOptionPane.showConfirmDialog(this, "Cheque Mate! Gostaria de jogar Novamente?", "Game Over",
+                    JOptionPane.YES_NO_OPTION);
+            if (resposta == JOptionPane.YES_OPTION) {
                 resetGame();
             } else {
                 System.exit(0);
             }
         }
+    }
+
+    private void animatePiece(Position origem, Position destino, String symbol, Color color, Runnable onComplete) {
+        if (origem == null || destino == null || symbol == null || symbol.isEmpty()) {
+            if (onComplete != null)
+                onComplete.run();
+            return;
+        }
+
+        JLabel moving = new JLabel(symbol);
+        moving.setFont(new Font("Serif", Font.BOLD, 36));
+        if (color != null)
+            moving.setForeground(color);
+        moving.setSize(moving.getPreferredSize());
+
+        JLayeredPane layered = getLayeredPane();
+
+        CasaDoTabuleiro origemCasa = casas[origem.getLinha()][origem.getColuna()];
+        CasaDoTabuleiro destinoCasa = casas[destino.getLinha()][destino.getColuna()];
+
+        Rectangle oBounds = origemCasa.getBounds();
+        Rectangle dBounds = destinoCasa.getBounds();
+
+        Point oOnLayer = SwingUtilities.convertPoint(origemCasa.getParent(), oBounds.getLocation(), layered);
+        Point dOnLayer = SwingUtilities.convertPoint(destinoCasa.getParent(), dBounds.getLocation(), layered);
+
+        Point originPoint = new Point(oOnLayer.x + oBounds.width / 2 - moving.getWidth() / 2,
+                oOnLayer.y + oBounds.height / 2 - moving.getHeight() / 2);
+        Point destPoint = new Point(dOnLayer.x + dBounds.width / 2 - moving.getWidth() / 2,
+                dOnLayer.y + dBounds.height / 2 - moving.getHeight() / 2);
+
+        moving.setLocation(originPoint);
+        layered.add(moving, JLayeredPane.POPUP_LAYER);
+
+        animating = true;
+
+        int durationMs = 220;
+        int frames = 18;
+        int delay = Math.max(1, durationMs / frames);
+        final double dx = (destPoint.x - originPoint.x) / (double) frames;
+        final double dy = (destPoint.y - originPoint.y) / (double) frames;
+        final int[] frame = { 0 };
+
+        Timer timer = new Timer(delay, e -> {
+            frame[0]++;
+            int x = (int) Math.round(originPoint.x + dx * frame[0]);
+            int y = (int) Math.round(originPoint.y + dy * frame[0]);
+            moving.setLocation(x, y);
+            if (frame[0] >= frames) {
+                ((Timer) e.getSource()).stop();
+                layered.remove(moving);
+                layered.repaint();
+                animating = false;
+                if (onComplete != null)
+                    onComplete.run();
+            }
+        });
+        timer.start();
     }
 }
