@@ -1,7 +1,7 @@
 # Programacao_WEB
 Repositório dos Cursos de Programação WEB I
 
-Repositório referente a projetos academicos de Desenvolvimento WEB.
+Repositório referente a projetos academicos de Desenvolvimento WEB
 
 <a href = "https://cdranka25.github.io/Projetos/Projetos-Front-End/Apresentacao_Social/html/index.html"> Projeto de Apresentação - Rede Social </a>
 <br><br>
